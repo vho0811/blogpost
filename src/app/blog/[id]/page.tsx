@@ -9,7 +9,7 @@ export default async function BlogPost({ params }: { params: Promise<{ id: strin
   return (
     <>
       {/* Reading Progress Bar - Fixed at top level */}
-      <ReadingProgressBar />
+      <ReadingProgressBar blogId={id} />
       
       {/* Floating Buttons - Completely separate from HTML content */}
       <div className="fixed top-10 left-10 z-[9999]" style={{ isolation: 'isolate', contain: 'layout style paint' }}>

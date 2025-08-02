@@ -22,12 +22,12 @@ export default function WritePage() {
     status: 'draft'
   });
   
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [savedMessage, setSavedMessage] = useState('');
 
   const handleSave = useCallback(async (status: 'draft' | 'published') => {
-    if (!blogPost.title || !blogPost.content) {
+         if (!blogPost.title || !blogPost.content) {
       showNotification('Please provide at least a title and content', 'warning');
       return;
     }
@@ -438,7 +438,7 @@ export default function WritePage() {
   // Auto-save functionality
   useEffect(() => {
     const autoSave = setTimeout(() => {
-      if (blogPost.title && blogPost.content) {
+             if (blogPost.title && blogPost.content) {
         handleSave('draft');
       }
     }, 10000); // Auto-save every 10 seconds
@@ -485,7 +485,7 @@ export default function WritePage() {
               
               <button
                 onClick={() => handleSave('published')}
-                disabled={isSaving || !blogPost.title || !blogPost.content}
+                                 disabled={isSaving || !blogPost.title || !blogPost.content}
                 className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-400 hover:to-purple-500 disabled:opacity-50 transition-all"
               >
                 {isSaving ? (editId ? 'Updating...' : 'Publishing...') : (editId ? 'Update & Publish' : 'Publish')}
@@ -503,8 +503,8 @@ export default function WritePage() {
             <input
               type="text"
               placeholder="Enter your blog title..."
-              value={blogPost.title}
-              onChange={(e) => setBlogPost({ ...blogPost, title: e.target.value })}
+                             value={blogPost.title}
+               onChange={(e) => setBlogPost({ ...blogPost, title: e.target.value })}
               className="w-full text-4xl md:text-5xl font-bold bg-transparent text-white placeholder-gray-500 border-none outline-none resize-none"
             />
           </div>
@@ -514,8 +514,8 @@ export default function WritePage() {
             <input
               type="text"
               placeholder="Add a subtitle (optional)..."
-              value={blogPost.subtitle}
-              onChange={(e) => setBlogPost({ ...blogPost, subtitle: e.target.value })}
+                             value={blogPost.subtitle}
+               onChange={(e) => setBlogPost({ ...blogPost, subtitle: e.target.value })}
               className="w-full text-xl text-gray-300 bg-transparent placeholder-gray-600 border-none outline-none"
             />
           </div>
@@ -524,8 +524,8 @@ export default function WritePage() {
           <div className="space-y-4">
             <label className="block text-white font-medium">Category</label>
             <select
-              value={blogPost.category}
-              onChange={(e) => setBlogPost({ ...blogPost, category: e.target.value })}
+                             value={blogPost.category}
+               onChange={(e) => setBlogPost({ ...blogPost, category: e.target.value })}
               className="w-full p-3 bg-gray-800 text-white border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="General">General</option>
@@ -544,8 +544,8 @@ export default function WritePage() {
           <div className="space-y-4">
             <label className="block text-white font-medium">Content</label>
             <BlockNoteEditor
-              initialContent={blogPost.content}
-              onChange={(content) => setBlogPost({ ...blogPost, content })}
+                             initialContent={blogPost.content}
+               onChange={(content) => setBlogPost({ ...blogPost, content })}
               placeholder="Start writing your blog content..."
             />
             <p className="text-gray-400 text-sm">

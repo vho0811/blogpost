@@ -319,9 +319,6 @@ export class BlogDatabase {
         return null;
       }
 
-      // Increment view count
-      await this.incrementViews(data.id);
-
       return data;
     } catch (error) {
       console.error('Error getting blog post by slug:', error);
@@ -363,7 +360,7 @@ export class BlogDatabase {
     }
   }
 
-  async getPublishedBlogPosts(limit?: number): Promise<BlogPost[]> {
+  async getPublishedBlogPosts(limit?: number, offset?: number): Promise<BlogPost[]> {
     try {
       let query = this.supabase
         .from('blog_posts')
@@ -379,7 +376,9 @@ export class BlogDatabase {
         .eq('status', 'published')
         .order('published_at', { ascending: false });
 
-      if (limit) {
+      if (offset) {
+        query = query.range(offset, offset + (limit || 10) - 1);
+      } else if (limit) {
         query = query.limit(limit);
       }
 
@@ -510,15 +509,23 @@ export class BlogDatabase {
       });
 
       if (rpcError) {
-
-        // Fallback to direct update
-        const { error: updateError } = await this.supabase
+        // Fallback: get current views and increment
+        const { data: currentPost, error: fetchError } = await this.supabase
           .from('blog_posts')
-          .update({ views: 1 })
-          .eq('id', blogPostId);
+          .select('views')
+          .eq('id', blogPostId)
+          .single();
 
-        if (updateError) {
-          console.error('Error incrementing views:', updateError);
+        if (!fetchError && currentPost) {
+          const currentViews = currentPost.views || 0;
+          const { error: updateError } = await this.supabase
+            .from('blog_posts')
+            .update({ views: currentViews + 1 })
+            .eq('id', blogPostId);
+
+          if (updateError) {
+            console.error('Error incrementing views:', updateError);
+          }
         }
       }
     } catch (error) {

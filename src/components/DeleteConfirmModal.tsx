@@ -23,7 +23,7 @@ export default function DeleteConfirmModal({
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm" 
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm cursor-pointer" 
         onClick={onCancel}
       />
       
@@ -49,12 +49,14 @@ export default function DeleteConfirmModal({
           <button
             onClick={onCancel}
             className="px-4 py-2 text-gray-300 hover:text-white bg-gray-700/50 hover:bg-gray-600/50 rounded-lg font-medium transition-all duration-200 border border-gray-600/50 hover:border-gray-500/50 cursor-pointer"
+            style={{ cursor: 'pointer' }}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-red-500/20 border border-red-500/50 cursor-pointer"
+            style={{ cursor: 'pointer' }}
           >
             Delete
           </button>

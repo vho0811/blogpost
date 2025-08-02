@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
+import { readingProgressManager } from '@/lib/reading-progress';
 import Link from 'next/link';
 import { showNotification } from '@/components/BeautifulNotification';
 import DeleteConfirmModal from '@/components/DeleteConfirmModal';
@@ -43,8 +44,9 @@ export default function DashboardPage() {
         setBlogPosts(posts);
       }
           } catch (error) {
-        // Error loading blog posts
-    } finally {
+        console.error('Error loading blog posts:', error);
+        setBlogPosts([]);
+      } finally {
       setLoading(false);
     }
   };
@@ -287,12 +289,36 @@ export default function DashboardPage() {
                       <p className="text-gray-300 mb-3">{post.subtitle}</p>
                     )}
                     
-                    <div className="flex items-center space-x-6 text-sm text-gray-400">
+                    <div className="flex items-center space-x-6 text-sm text-gray-400 mb-3">
                       <span>Category: {post.category}</span>
                       <span>Views: {post.views || 0}</span>
                       <span>Likes: {post.likes || 0}</span>
                       <span>Read time: {post.read_time || 0} min</span>
                       <span>Created: {formatDate(post.created_at!)}</span>
+                    </div>
+                    
+                    {/* Reading Progress */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <span>Reading Progress</span>
+                        <span>
+                          {(() => {
+                            const progress = readingProgressManager.getProgress(post.id || '');
+                            return progress ? `${Math.round(progress.progress)}%` : '0%';
+                          })()}
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 bg-gray-700/60 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-300" 
+                          style={{ 
+                            width: `${(() => {
+                              const progress = readingProgressManager.getProgress(post.id || '');
+                              return progress ? progress.progress : 0;
+                            })()}%` 
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                   
@@ -322,7 +348,7 @@ export default function DashboardPage() {
                     
                     <select
                       value={post.status}
-                      onChange={(e) => handleStatusChange(post.id!, e.target.value as any)}
+                      onChange={(e) => handleStatusChange(post.id!, e.target.value as 'draft' | 'published' | 'archived')}
                       className="bg-gray-700 text-white text-sm rounded px-2 py-1 border border-gray-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
                     >
                       <option value="draft">Draft</option>

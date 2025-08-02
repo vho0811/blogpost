@@ -5,13 +5,16 @@ import Link from 'next/link';
 import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
 import { useState, useEffect } from 'react';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
-import BlogAIDesigner from '@/components/BlogAIDesigner';
 
 export default function Home() {
   const { isSignedIn, user, isLoaded } = useUser();
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [featuredPost, setFeaturedPost] = useState<BlogPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPosts, setTotalPosts] = useState(0);
 
   // Debug Clerk state
 
@@ -21,13 +24,17 @@ export default function Home() {
     const fetchBlogPosts = async () => {
       try {
         setIsLoading(true);
-        const posts = await blogDatabase.getPublishedBlogPosts();
+        const posts = await blogDatabase.getPublishedBlogPosts(12); // Show 12 posts initially
         setBlogPosts(posts || []);
+        setTotalPosts(posts?.length || 0);
         
         // Set the first post as featured, or use a default
         if (posts && posts.length > 0) {
           setFeaturedPost(posts[0]);
         }
+        
+        // Check if there are more posts to load (if we got exactly 12, there might be more)
+        setHasMorePosts((posts?.length || 0) >= 12);
       } catch (error) {
         console.error('Error fetching blog posts:', error);
         setBlogPosts([]);
@@ -37,9 +44,33 @@ export default function Home() {
     };
 
     fetchBlogPosts();
-
-
   }, []);
+
+  // Load more posts function
+  const loadMorePosts = async () => {
+    if (isLoadingMore || !hasMorePosts) return;
+    
+    try {
+      setIsLoadingMore(true);
+      const nextPage = currentPage + 1;
+      const offset = (nextPage - 1) * 12; // Load 12 more posts
+      
+      // Fetch next batch of posts
+      const morePosts = await blogDatabase.getPublishedBlogPosts(12, offset);
+      
+      if (morePosts && morePosts.length > 0) {
+        setBlogPosts(prev => [...prev, ...morePosts]);
+        setCurrentPage(nextPage);
+        setHasMorePosts(morePosts.length >= 12);
+      } else {
+        setHasMorePosts(false);
+      }
+    } catch (error) {
+      console.error('Error loading more posts:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black">
@@ -219,16 +250,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Interactive Progress Bar */}
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm text-gray-400">
-                      <span>Reading Progress</span>
-                      <span>Featured Story</span>
-                    </div>
-                    <div className="w-full h-3 bg-gray-800/60 rounded-full overflow-hidden border border-gray-700/50">
-                      <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-1000 ease-out group-hover:w-full shadow-lg shadow-blue-500/20" style={{ width: '0%' }}></div>
-                    </div>
-                  </div>
+
 
                   {/* Call to Action */}
                   <div className="mt-8 flex items-center justify-between">
@@ -309,8 +331,10 @@ export default function Home() {
                         {post.subtitle}
                       </p>
 
-                      {/* Author and Date */}
-                      <div className="flex items-center justify-between pt-4">
+
+
+                      {/* Author, Date, and Stats */}
+                      <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center space-x-3">
                           {(post as any)?.users?.profile_image_url ? (
                             <img 
@@ -332,9 +356,15 @@ export default function Home() {
                             <p className="text-gray-400 text-xs">Blog Creator</p>
                           </div>
                         </div>
-                        <time className="text-gray-400 text-xs">
-                          {post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Recently'}
-                        </time>
+                        <div className="text-right">
+                          <time className="text-gray-400 text-xs block">
+                            {post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Recently'}
+                          </time>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-green-400 text-xs font-medium">{post.views || 0} views</span>
+                            <span className="text-blue-400 text-xs font-medium">{post.likes || 0} likes</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </article>
@@ -356,43 +386,58 @@ export default function Home() {
           )}
         </div>
 
-        {/* AI Enhancement Section */}
-        <div className="text-center mb-16">
-          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-2xl p-8 backdrop-blur-md">
-            <h2 className="text-3xl font-bold text-white mb-4">AI-Powered Content Enhancement</h2>
-            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              Transform your blog posts into stunning, engaging content with our AI-powered enhancer. 
-              Get beautiful designs, interactive elements, and SEO optimizations instantly.
-            </p>
-            {isSignedIn ? (
-              <Link href="/write" className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full hover:from-blue-400 hover:to-purple-500 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
-                Start Creating with AI
-                <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </Link>
-            ) : (
-              <SignInButton mode="modal">
-                <button className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full hover:from-blue-400 hover:to-purple-500 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/30 cursor-pointer border border-blue-400/20">
-                  Sign In to Start
-                  <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </button>
-              </SignInButton>
-            )}
-          </div>
-        </div>
+
 
         {/* Load More Section */}
-        <div className="text-center">
-          <button className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full hover:from-blue-400 hover:to-purple-500 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer">
-            Load More Stories
-            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
+        {blogPosts.length > 0 && (
+          <div className="text-center mb-16">
+            {hasMorePosts ? (
+              <button 
+                onClick={loadMorePosts}
+                disabled={isLoadingMore}
+                className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full hover:from-blue-400 hover:to-purple-500 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Loading More Stories...
+                  </>
+                ) : (
+                  <>
+                    Load More Stories
+                    <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="text-center py-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-full mb-4">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">You've Seen All Stories!</h3>
+                <p className="text-gray-400 mb-6">You've reached the end of our current collection. Check back soon for more amazing stories!</p>
+                {isSignedIn && (
+                  <Link 
+                    href="/write" 
+                    className="inline-flex items-center px-6 py-3 text-white bg-gradient-to-r from-green-500 to-blue-600 rounded-lg hover:from-green-400 hover:to-blue-500 transition-all duration-300"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Write Your Own Story
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );
