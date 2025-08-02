@@ -2,10 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useUser } from '@clerk/nextjs';
 import { Textarea } from '@/components/ui/textarea';
 
 interface SimpleAIDesignButtonProps {
   blogId: string;
+  blogPost?: {
+    user_id?: string;
+  } | null;
 }
 
 interface AIDesignSettings {
@@ -58,7 +62,8 @@ const styleOptions = [
   }
 ];
 
-export default function SimpleAIDesignButton({ blogId }: SimpleAIDesignButtonProps) {
+export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesignButtonProps) {
+  const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -89,6 +94,8 @@ export default function SimpleAIDesignButton({ blogId }: SimpleAIDesignButtonPro
       if (response.ok) {
         window.dispatchEvent(new CustomEvent('aiDesignApplied'));
         setIsOpen(false);
+        // Auto reload the page to show the new design
+        window.location.reload();
       } else {
         console.error('AI design failed');
       }
@@ -123,7 +130,38 @@ export default function SimpleAIDesignButton({ blogId }: SimpleAIDesignButtonPro
     });
   };
 
+  // Check if current user is the owner of the blog post
+  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const getSupabaseUserId = async () => {
+      if (user) {
+        try {
+          const response = await fetch('/api/get-supabase-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clerkUserId: user.id })
+          });
+          const { data: supabaseUser } = await response.json();
+          
+          if (supabaseUser?.id) {
+            setSupabaseUserId(supabaseUser.id);
+          }
+        } catch (error) {
+          console.error('Error getting Supabase user ID:', error);
+        }
+      }
+    };
+    
+    getSupabaseUserId();
+  }, [user]);
+  
+  const isOwner = supabaseUserId && blogPost && blogPost.user_id && supabaseUserId === blogPost.user_id;
+  
   if (!mounted) return null;
+  
+  // Only show the button if user is the owner
+  if (!isOwner) return null;
 
   return (
     <>
