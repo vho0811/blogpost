@@ -13,8 +13,16 @@ export function UserSync() {
         try {
       
           
-          // Pass the entire Clerk user object to createOrUpdateUser
-          const result = await blogDatabase.createOrUpdateUser(user);
+          // Pass the Clerk user object with proper type conversion
+          const result = await blogDatabase.createOrUpdateUser({
+            id: user.id,
+            email: user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress || undefined,
+            username: user.username || undefined,
+            firstName: user.firstName || undefined,
+            lastName: user.lastName || undefined,
+            imageUrl: user.imageUrl || undefined,
+            profile_image_url: user.imageUrl || undefined
+          });
           
           if (result) {
       

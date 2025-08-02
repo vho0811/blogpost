@@ -107,6 +107,17 @@ const modifyHTMLWithAI = async (existingHTML: string, blogPost: BlogPost, themeP
     return existingHTML;
   }
 
+  // Truncate content if it's too long to avoid token limits
+  const maxContentLength = 15000; // Characters
+  const truncatedContent = blogPost.content.length > maxContentLength 
+    ? blogPost.content.substring(0, maxContentLength) + '... [Content truncated for AI processing]'
+    : blogPost.content;
+    
+  // Log warning if content was truncated
+  if (blogPost.content.length > maxContentLength) {
+    console.warn(`Blog post content truncated from ${blogPost.content.length} to ${maxContentLength} characters for AI processing`);
+  }
+
   const systemPrompt = `You are a professional web designer and developer. Your task is to redesign an entire HTML page based on user requirements.
 
 IMPORTANT CONTEXT:
@@ -131,7 +142,7 @@ CRITICAL REQUIREMENTS:
 8. IMPORTANT: Include the actual blog content in the content area
 9. DO NOT use comments like "<!-- Rest of the HTML remains exactly the same -->"
 10. Redesign the complete HTML structure with enhanced CSS for the entire page
-11. The content section should contain: ${blogPost.content}
+11. The content section should contain: ${truncatedContent}
 12. Redesign outer-wrapper, header, navigation, hero section, content area - EVERYTHING
 13. The outer wrapper and background should match the theme
 14. DO NOT include any AI Design buttons in the HTML - they are handled separately
@@ -141,7 +152,7 @@ CRITICAL REQUIREMENTS:
 BLOG INFO:
 Title: ${blogPost.title}
 Subtitle: ${blogPost.subtitle || ''}
-Content: ${blogPost.content}
+Content: ${truncatedContent}
 Category: ${blogPost.category || 'General'}
 Read Time: ${blogPost.read_time && blogPost.read_time > 0 ? blogPost.read_time : 5} min read
 

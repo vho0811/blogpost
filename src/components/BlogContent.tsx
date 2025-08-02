@@ -64,8 +64,12 @@ export default function BlogContent({ docId }: BlogContentProps) {
       setLoading(true);
       try {
         let post: BlogPost | null = null;
+        
+        // First try to get by slug (for published posts)
         post = await blogDatabase.getBlogPostBySlug(docId);
-        if (!post) {
+        
+        // If not found by slug, only try by ID if it looks like a UUID
+        if (!post && docId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
           post = await blogDatabase.getBlogPost(docId);
         }
         

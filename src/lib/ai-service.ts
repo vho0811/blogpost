@@ -82,7 +82,7 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
       if (this.anthropic) {
         const anthropicResponse = await this.anthropic.messages.create({
           model: this.config.model,
-          max_tokens: this.config.maxTokens,
+          max_tokens: Math.min(this.config.maxTokens, 32000), // Higher cap for long content
           temperature: this.config.temperature,
           messages: [{ role: 'user', content: prompt }],
         });
@@ -124,9 +124,10 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
     
         const anthropicResponse = await this.anthropic.messages.create({
           model: this.config.model,
-          max_tokens: this.config.maxTokens,
+          max_tokens: Math.min(this.config.maxTokens, 32000), // Higher cap for long content
           temperature: this.config.temperature,
           messages: [{ role: 'user', content: customPrompt }],
+          stream: false, // Disable streaming to avoid the warning
         });
         response = (anthropicResponse.content[0] as { text?: string })?.text || '';
       } else if (this.openai) {
@@ -276,6 +277,7 @@ Return as a JSON array of strings.
           max_tokens: 500,
           temperature: this.config.temperature,
           messages: [{ role: 'user', content: prompt }],
+          stream: false, // Disable streaming to avoid the warning
         });
         response = (anthropicResponse.content[0] as { text?: string })?.text || '';
       } else if (this.openai) {
@@ -353,7 +355,7 @@ export const aiService = new AIService({
   provider: (process.env.AI_PROVIDER as 'openai' | 'anthropic' | 'google' | 'ollama') || 'anthropic',
   model: process.env.AI_MODEL || 'claude-3-5-sonnet-20241022',
   temperature: parseFloat(process.env.AI_TEMPERATURE || '0.7'),
-  maxTokens: parseInt(process.env.MAX_TOKENS || '4000'),
+  maxTokens: Math.min(parseInt(process.env.MAX_TOKENS || '4000'), 32000), // Higher cap for long content, but still reasonable
 });
 
 export default AIService; 

@@ -418,7 +418,7 @@ export class BlogDatabase {
       }
 
       return data || [];
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error getting published blog posts:', error);
       return [];
     }
