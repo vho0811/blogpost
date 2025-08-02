@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { designDatabase } from '@/lib/supabase-client';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
 import { useUser } from '@clerk/nextjs';
+import { showNotification } from './BeautifulNotification';
 
 interface BlogAIDesignerProps {
   blogId?: string;
@@ -52,39 +53,39 @@ export default function BlogAIDesigner({
   useEffect(() => {
     const loadBlogPost = async () => {
       if (!blogId && !blogSlug) {
-        console.log('🚫 No blogId or blogSlug provided');
+    
         return;
       }
       
-      console.log('📖 Loading blog post with:', { blogId, blogSlug, hasUser: !!user });
+
       setLoadingBlog(true);
       
       try {
         let post: BlogPost | null = null;
         
         if (blogId) {
-          console.log('🔍 Trying to get by ID:', blogId);
+  
           post = await blogDatabase.getBlogPost(blogId);
           
           if (!post) {
-            console.log('🔍 ID failed, trying as slug:', blogId);
+  
             post = await blogDatabase.getBlogPostBySlug(blogId);
           }
         } else if (blogSlug) {
-          console.log('🔍 Trying to get by slug:', blogSlug);
+  
           post = await blogDatabase.getBlogPostBySlug(blogSlug);
         }
         
         if (post) {
           setBlogPost(post);
-          console.log('✅ Loaded blog post:', { id: post.id, title: post.title, user_id: post.user_id, has_ai_html: !!post.ai_generated_html });
+  
           
           // Check if current user is the owner
           if (user && post.user_id) {
             const currentUser = await blogDatabase.getCurrentUser(user.id);
             const isOwner = currentUser?.id === post.user_id;
             setIsOwner(isOwner);
-            console.log('👤 Ownership check:', { currentUserId: currentUser?.id, postUserId: post.user_id, isOwner });
+    
           }
           
           // Note: Design theme and prompt columns were removed from database
@@ -92,7 +93,7 @@ export default function BlogAIDesigner({
           setSelectedTheme('');
           setDesignPrompt('');
         } else {
-          console.log('❌ Blog post not found');
+  
         }
       } catch (error) {
         console.error('💥 Error loading blog post:', error);
@@ -106,17 +107,17 @@ export default function BlogAIDesigner({
 
   const handleRedesign = async () => {
     if (!blogPost || !user) {
-      alert('Missing blog post or user authentication');
+      showNotification('Missing blog post or user authentication', 'error');
       return;
     }
 
     if (!designPrompt.trim()) {
-      alert('Please enter a design description or select a theme');
+      showNotification('Please enter a design description or select a theme', 'warning');
       return;
     }
     
     setIsRedesigning(true);
-    console.log('🎨 Starting AI design with:', { blogPostId: blogPost.id, themePrompt: designPrompt });
+
     
     try {
       const response = await fetch('/api/ai-design', {
@@ -130,12 +131,11 @@ export default function BlogAIDesigner({
         })
       });
 
-      console.log('📡 API Response status:', response.status);
+
       const result = await response.json();
-      console.log('📊 API Result:', result);
       
       if (result.success) {
-        alert('🎉 Blog post redesigned successfully! The new design has been applied.');
+        showNotification('🎉 Blog post redesigned successfully! The new design has been applied.', 'success');
         
         // Call the callback to notify parent component
         if (onDesignApplied) {
@@ -148,13 +148,11 @@ export default function BlogAIDesigner({
           if (onClose) onClose();
         }, 1000);
       } else {
-        console.error('❌ Design failed:', result.error);
-        alert(`❌ Design failed: ${result.error || 'Unknown error'}`);
+        showNotification(`❌ Design failed: ${result.error || 'Unknown error'}`, 'error');
       }
       
     } catch (error) {
-      console.error('💥 Blog post redesign failed:', error);
-      alert('💥 Failed to redesign blog post. Please try again.');
+      showNotification('💥 Failed to redesign blog post. Please try again.', 'error');
     } finally {
       setIsRedesigning(false);
     }
@@ -180,7 +178,7 @@ export default function BlogAIDesigner({
       const result = await response.json();
       
       if (result.success) {
-        alert('Blog post reset to default design successfully!');
+        showNotification('Blog post reset to default design successfully!', 'success');
         
         // Call the callback to notify parent component
         if (onDesignApplied) {
@@ -193,12 +191,11 @@ export default function BlogAIDesigner({
           if (onClose) onClose();
         }, 1000);
       } else {
-        alert(`Reset failed: ${result.error}`);
+        showNotification(`Reset failed: ${result.error}`, 'error');
       }
       
     } catch (error) {
-      console.error('Blog post reset failed:', error);
-      alert('Failed to reset blog post. Please try again.');
+      showNotification('Failed to reset blog post. Please try again.', 'error');
     } finally {
       setIsRedesigning(false);
     }
@@ -241,7 +238,7 @@ export default function BlogAIDesigner({
 
   // Show AI designer for all users (for testing)
   // if (!user) {
-  //   console.log('No user, hiding AI designer');
+  
   //   return null;
   // }
 
@@ -250,12 +247,12 @@ export default function BlogAIDesigner({
   // Set up communication listeners for HTML template button
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      console.log('🔧 Setting up AI Designer communication listeners');
+  
       
       // Listen for postMessage from HTML template
       const handleMessage = (event: MessageEvent) => {
         if (event.data?.type === 'OPEN_AI_DESIGNER' && event.data?.source === 'blog-html-template') {
-          console.log('📨 Received postMessage to open AI Designer');
+    
           setIsOpen(true);
         }
       };
@@ -263,14 +260,14 @@ export default function BlogAIDesigner({
       // Listen for custom event from HTML template
       const handleCustomEvent = (event: CustomEvent) => {
         if (event.detail?.source === 'blog-html-template') {
-          console.log('🎯 Received custom event to open AI Designer');
+    
           setIsOpen(true);
         }
       };
       
       // Set up global function as fallback (for external isOpen prop)
       (window as any).openAIDesignerModal = () => {
-        console.log('🌐 Global function called to open AI Designer');
+    
         setIsOpen(true);
       };
       

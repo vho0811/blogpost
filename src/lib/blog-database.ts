@@ -99,7 +99,6 @@ export class BlogDatabase {
   // User Management
   async createOrUpdateUser(clerkUser: any): Promise<User | null> {
     try {
-      console.log('Creating/updating user with data:', clerkUser);
       
       // Extract email properly
       const email = clerkUser.email || 
@@ -121,7 +120,7 @@ export class BlogDatabase {
         profile_image_url: clerkUser.imageUrl || clerkUser.profileImageUrl || clerkUser.profile?.imageUrl || clerkUser.externalAccounts?.[0]?.imageUrl || clerkUser.profile_image_url || '',
       };
 
-      console.log('User data to insert:', userData);
+
 
       const { data, error } = await this.supabase
         .from('users')
@@ -143,7 +142,7 @@ export class BlogDatabase {
         return null;
       }
 
-      console.log('User created/updated successfully:', data);
+      
       return data;
     } catch (error: any) {
       console.error('Error creating/updating user:', error);
@@ -195,13 +194,12 @@ export class BlogDatabase {
   // Blog Post Management
   async createBlogPost(blogPost: Omit<BlogPost, 'id' | 'user_id' | 'created_at' | 'updated_at'>, clerkUserId: string): Promise<BlogPost | null> {
     try {
-      console.log('Creating blog post with data:', blogPost);
-      console.log('Clerk user ID:', clerkUserId);
+      
 
       // Get or create user
       let currentUser = await this.getCurrentUser(clerkUserId);
       if (!currentUser) {
-        console.log('User not found, creating new user...');
+
         // Create user if they don't exist
         currentUser = await this.createOrUpdateUser({ id: clerkUserId });
         if (!currentUser) {
@@ -210,17 +208,15 @@ export class BlogDatabase {
         }
       }
 
-      console.log('Current user:', currentUser);
+
 
       // Generate unique slug if not provided
       if (!blogPost.slug) {
         blogPost.slug = await this.generateUniqueSlug(blogPost.title);
       }
 
-      // Calculate read time
-      if (!blogPost.read_time) {
-        blogPost.read_time = this.calculateReadTime(blogPost.content);
-      }
+      // Calculate read time (always recalculate to ensure accuracy)
+      blogPost.read_time = this.calculateReadTime(blogPost.content);
 
       const insertData = {
         ...blogPost,
@@ -228,7 +224,7 @@ export class BlogDatabase {
         published_at: blogPost.status === 'published' ? new Date().toISOString() : null
       };
 
-      console.log('Inserting blog post with data:', insertData);
+
 
       const { data, error } = await this.supabase
         .from('blog_posts')
@@ -242,7 +238,7 @@ export class BlogDatabase {
         return null;
       }
 
-      console.log('Blog post created successfully:', data);
+
       return data;
     } catch (error: any) {
       console.error('Error creating blog post:', error);
@@ -280,13 +276,11 @@ export class BlogDatabase {
         .single();
 
       if (error) {
-        console.error('Error updating blog post:', error);
         return null;
       }
 
       return data;
     } catch (error) {
-      console.error('Error updating blog post:', error);
       return null;
     }
   }
@@ -516,7 +510,7 @@ export class BlogDatabase {
       });
 
       if (rpcError) {
-        console.log('RPC increment_views failed, using direct update:', rpcError);
+
         // Fallback to direct update
         const { error: updateError } = await this.supabase
           .from('blog_posts')
@@ -604,6 +598,73 @@ export class BlogDatabase {
     
     // Ensure minimum of 1 minute
     return Math.max(readTime, 1);
+  }
+
+  // Recalculate read time for existing blog posts
+  async recalculateReadTime(blogPostId: string): Promise<boolean> {
+    try {
+      const { data: post, error: fetchError } = await this.supabase
+        .from('blog_posts')
+        .select('content')
+        .eq('id', blogPostId)
+        .single();
+
+      if (fetchError || !post) {
+        console.error('Error fetching blog post for read time calculation:', fetchError);
+        return false;
+      }
+
+      const newReadTime = this.calculateReadTime(post.content);
+
+      const { error: updateError } = await this.supabase
+        .from('blog_posts')
+        .update({ read_time: newReadTime })
+        .eq('id', blogPostId);
+
+      if (updateError) {
+        console.error('Error updating read time:', updateError);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error recalculating read time:', error);
+      return false;
+    }
+  }
+
+  // Recalculate read times for ALL blog posts (admin function)
+  async recalculateAllReadTimes(): Promise<number> {
+    try {
+      const { data: posts, error } = await this.supabase
+        .from('blog_posts')
+        .select('id, content');
+
+      if (error || !posts) {
+        console.error('Error fetching all blog posts:', error);
+        return 0;
+      }
+
+      let updatedCount = 0;
+      for (const post of posts) {
+        const newReadTime = this.calculateReadTime(post.content);
+        
+        const { error: updateError } = await this.supabase
+          .from('blog_posts')
+          .update({ read_time: newReadTime })
+          .eq('id', post.id);
+
+        if (!updateError) {
+          updatedCount++;
+        }
+      }
+
+      console.log(`✅ Updated read times for ${updatedCount} blog posts`);
+      return updatedCount;
+    } catch (error) {
+      console.error('Error recalculating all read times:', error);
+      return 0;
+    }
   }
 
   // Generate initial HTML template for new blog posts
@@ -811,7 +872,7 @@ export class BlogDatabase {
         </div>
       </div>
       <div>${new Date(blogPost.published_at || blogPost.created_at || '').toLocaleDateString()}</div>
-      <div>${blogPost.read_time || 5} min read</div>
+      <div>${blogPost.read_time && blogPost.read_time > 0 ? blogPost.read_time : 5} min read</div>
     </div>
   </section>
 
@@ -839,7 +900,7 @@ export class BlogDatabase {
   // Method to refresh HTML template for existing blog posts (for testing)
   async refreshHTMLTemplate(blogPostId: string): Promise<boolean> {
     try {
-      console.log('Refreshing HTML template for blog post:', blogPostId);
+  
       
       // Get the blog post
       const blogPost = await this.getBlogPost(blogPostId);
@@ -867,7 +928,7 @@ export class BlogDatabase {
         return false;
       }
 
-      console.log('✅ HTML template refreshed successfully');
+
       return true;
     } catch (error) {
       console.error('Error refreshing HTML template:', error);

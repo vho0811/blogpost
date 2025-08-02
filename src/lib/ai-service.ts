@@ -121,7 +121,7 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
 
       // Try Claude first, then fallback to other providers
       if (this.anthropic) {
-        console.log('Using Claude for custom design request');
+    
         const anthropicResponse = await this.anthropic.messages.create({
           model: this.config.model,
           max_tokens: this.config.maxTokens,
@@ -130,7 +130,7 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
         });
         response = (anthropicResponse.content[0] as any)?.text || '';
       } else if (this.openai) {
-        console.log('Using OpenAI for custom design request');
+    
         const openaiResponse = await this.openai.chat.completions.create({
           model: this.config.model,
           messages: [{ role: 'user', content: customPrompt }],
@@ -139,7 +139,7 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
         });
         response = openaiResponse.choices[0]?.message?.content || '';
       } else if (this.googleAI) {
-        console.log('Using Google AI for custom design request');
+    
         const model = this.googleAI.getGenerativeModel({ model: this.config.model });
         const googleResponse = await model.generateContent(customPrompt);
         response = googleResponse.response.text();
@@ -148,7 +148,7 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
         return this.createFallbackEnhancement('', 'Technology');
       }
 
-      console.log('AI Response:', response);
+    
       
       // Check if response looks like HTML
       if (response.includes('<!DOCTYPE html>') || response.includes('<html') || response.includes('<body')) {
@@ -169,7 +169,7 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
         const enhancedPost = JSON.parse(response) as EnhancedBlogPost;
         return enhancedPost;
       } catch (parseError) {
-        console.log('Response is not JSON, treating as plain text');
+  
         // Return the response as content
         return {
           title: 'Custom Design',

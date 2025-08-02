@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
+import { showNotification } from './BeautifulNotification';
 
 interface AIDesignToggleProps {
   docId: string;
@@ -73,12 +74,10 @@ export default function AIDesignToggle({ docId, onDesignApplied }: AIDesignToggl
           onDesignApplied();
         }
       } else {
-        console.error('AI design generation failed:', result.error);
-        alert('Failed to generate AI design. Please try again.');
+        showNotification('Failed to generate AI design. Please try again.', 'error');
       }
     } catch (error) {
-      console.error('Error generating AI design:', error);
-      alert('Failed to generate AI design. Please try again.');
+      showNotification('Failed to generate AI design. Please try again.', 'error');
     } finally {
       setIsGenerating(false);
     }

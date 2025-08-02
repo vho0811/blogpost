@@ -67,7 +67,7 @@ export default function SimpleAIDesignButton({ blogId }: SimpleAIDesignButtonPro
   
   const [settings, setSettings] = useState<AIDesignSettings>({
     style: 'modern',
-    customPrompt: '',
+    customPrompt: styleOptions.find(option => option.value === 'modern')?.prompt || '',
   });
 
   useEffect(() => {
@@ -115,7 +115,14 @@ export default function SimpleAIDesignButton({ blogId }: SimpleAIDesignButtonPro
   };
 
   const handleStyleSelect = (style: AIDesignSettings['style']) => {
-    setSettings({ ...settings, style });
+    const selectedOption = styleOptions.find(option => option.value === style);
+    const autoPrompt = selectedOption?.prompt || '';
+    
+    setSettings({ 
+      ...settings, 
+      style, 
+      customPrompt: autoPrompt 
+    });
   };
 
   if (!mounted) return null;
@@ -125,7 +132,7 @@ export default function SimpleAIDesignButton({ blogId }: SimpleAIDesignButtonPro
       <button
         onClick={() => setIsOpen(true)}
         disabled={isGenerating}
-        className="group bg-gray-900/95 backdrop-blur-md text-white px-10 py-5 rounded-2xl font-semibold hover:bg-gray-800/95 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-5 shadow-2xl border border-gray-700/30 hover:border-gray-600/50 hover:shadow-gray-900/25 hover:scale-105"
+        className="group bg-gray-900/95 backdrop-blur-md text-white px-10 py-5 rounded-2xl font-semibold hover:bg-gray-800/95 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-5 shadow-2xl border border-gray-700/30 hover:border-gray-600/50 hover:shadow-gray-900/25"
         style={{ 
           all: 'unset', 
           display: 'flex', 
@@ -166,73 +173,196 @@ export default function SimpleAIDesignButton({ blogId }: SimpleAIDesignButtonPro
         )}
       </button>
 
-      {/* Professional Modal */}
+      {/* Professional Dark Modal - Vertical Layout */}
       {isOpen && createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-6">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-8 sm:p-12">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md" onClick={() => setIsOpen(false)} />
           
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden border border-gray-100">
-            {/* Header */}
-            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white px-8 py-8">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-2">AI Design Generator</h1>
-                    <p className="text-slate-300 text-lg leading-relaxed">Transform your blog with intelligent design. Choose a style and let AI create a beautiful, professional layout.</p>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-white/80 hover:text-white transition-colors p-3 rounded-2xl hover:bg-white/10"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+          <div className="relative flex flex-col bg-gray-900 rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-gray-700/30"
+            style={{
+              background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(20px)'
+            }}
+          >
+            
+            {/* Close Button */}
+            <div className="absolute top-8 right-8 z-10">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="group transition-all duration-300"
+                style={{
+                  padding: '12px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  color: '#94a3b8',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(248, 113, 113, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(248, 113, 113, 0.3)';
+                  e.currentTarget.style.color = '#f87171';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.color = '#94a3b8';
+                }}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            {/* Content */}
-            <div className="p-8 overflow-y-auto max-h-[calc(85vh-200px)] space-y-10">
-              {/* Style Selection */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
-                  <h2 className="text-2xl font-bold text-gray-900">Design Style</h2>
+            {/* Content Body - Horizontal Layout */}
+            <div 
+              style={{
+                display: 'flex',
+                height: '100%',
+                minHeight: '600px'
+              }}
+            >
+              {/* Left Side - Design Styles */}
+              <div 
+                style={{
+                  flex: '2',
+                  padding: '3rem 2rem 3rem 3rem',
+                  borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'linear-gradient(180deg, rgba(15, 20, 25, 0.5) 0%, rgba(26, 31, 46, 0.3) 100%)'
+                }}
+              >
+                <div 
+                  style={{
+                    marginBottom: '2.5rem',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                    paddingBottom: '1.5rem'
+                  }}
+                >
+                  <h2 
+                    style={{
+                      fontSize: '1.5rem',
+                      fontWeight: '700',
+                      background: 'linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #60a5fa 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      marginBottom: '0.5rem'
+                    }}
+                  >
+                    Choose Your Style
+                  </h2>
+                  <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                    Select a design aesthetic that matches your vision
+                  </p>
                 </div>
-                
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <div 
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '1.5rem',
+                    maxHeight: '400px',
+                    overflowY: 'auto',
+                    paddingRight: '1rem'
+                  }}
+                >
                   {styleOptions.map((option) => (
                     <button
                       key={option.value}
                       onClick={() => handleStyleSelect(option.value as AIDesignSettings['style'])}
-                      className={`group p-6 border-2 rounded-2xl text-left transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${
-                        settings.style === option.value
-                          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg shadow-blue-100'
-                          : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-                      }`}
+                      className="group transition-all duration-300"
+                      style={{
+                        padding: '1.5rem',
+                        borderRadius: '16px',
+                        textAlign: 'left',
+                        background: settings.style === option.value 
+                          ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.15) 100%)'
+                          : 'rgba(255, 255, 255, 0.03)',
+                        border: settings.style === option.value 
+                          ? '2px solid rgba(59, 130, 246, 0.5)'
+                          : '1px solid rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (settings.style !== option.value) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (settings.style !== option.value) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                        }
+                      }}
                     >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="text-3xl">{option.icon}</div>
+                      {settings.style === option.value && (
+                        <div 
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: '2px',
+                            backgroundImage: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6)',
+                            backgroundSize: '200% 100%',
+                            animation: 'shimmer 2s infinite'
+                          }}
+                        />
+                      )}
+                      
+                      <div 
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: '1rem'
+                        }}
+                      >
+                        <div style={{ fontSize: '1.5rem' }}>{option.icon}</div>
                         {settings.style === option.value && (
-                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div 
+                            style={{
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)'
+                            }}
+                          >
+                            <svg style={{ width: '12px', height: '12px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                           </div>
                         )}
                       </div>
                       
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                      <h3 
+                        style={{
+                          fontSize: '1rem',
+                          fontWeight: '600',
+                          color: settings.style === option.value ? '#ffffff' : '#e2e8f0',
+                          marginBottom: '0.5rem'
+                        }}
+                      >
                         {option.label}
                       </h3>
-                      <p className="text-gray-600 leading-relaxed text-sm">
+                      <p 
+                        style={{
+                          color: '#64748b',
+                          fontSize: '0.8rem',
+                          lineHeight: '1.4'
+                        }}
+                      >
                         {option.desc}
                       </p>
                     </button>
@@ -240,65 +370,193 @@ export default function SimpleAIDesignButton({ blogId }: SimpleAIDesignButtonPro
                 </div>
               </div>
 
-              {/* Custom Prompt */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-1 h-8 bg-gradient-to-b from-emerald-500 to-teal-600 rounded-full"></div>
-                  <h2 className="text-2xl font-bold text-gray-900">Custom Instructions</h2>
+              {/* Right Side - Custom Instructions */}
+              <div 
+                style={{
+                  flex: '1',
+                  padding: '3rem',
+                  background: 'linear-gradient(180deg, rgba(26, 31, 46, 0.3) 0%, rgba(15, 20, 25, 0.5) 100%)',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+              >
+                <div 
+                  style={{
+                    marginBottom: '2.5rem',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                    paddingBottom: '1.5rem'
+                  }}
+                >
+                  <h2 
+                    style={{
+                      fontSize: '1.5rem',
+                      fontWeight: '700',
+                      background: 'linear-gradient(135deg, #ffffff 0%, #10b981 50%, #06b6d4 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      marginBottom: '0.5rem'
+                    }}
+                  >
+                    Custom Instructions
+                  </h2>
+                  <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
+                    Auto-filled when you select a style. Feel free to modify or add more details!
+                  </p>
                 </div>
-                
-                <div className="space-y-4">
-                  <Label htmlFor="custom-prompt" className="text-base font-semibold text-gray-700">
-                    Additional design requirements (optional)
-                  </Label>
+
+                <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
                   <Textarea
                     id="custom-prompt"
                     value={settings.customPrompt}
                     onChange={(e) => setSettings({ ...settings, customPrompt: e.target.value })}
-                    placeholder="Describe any specific design requests, color preferences, or special requirements..."
-                    className="min-h-[120px] text-base leading-relaxed"
-                    rows={5}
+                    placeholder="Select a design style to auto-fill this area, then customize as needed..."
+                    className="resize-none transition-all duration-300"
+                    rows={12}
+                    style={{
+                      flex: '1',
+                      fontSize: '0.95rem',
+                      lineHeight: '1.6',
+                      padding: '1.5rem',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      color: '#e2e8f0',
+                      backdropFilter: 'blur(10px)',
+                      outline: 'none'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
                   />
-                  <p className="text-sm text-gray-500 mt-2">
-                    Be specific about colors, layouts, or any special features you'd like to see in your design.
+                  <p 
+                    style={{
+                      fontSize: '0.8rem',
+                      color: '#64748b',
+                      marginTop: '1rem',
+                      fontStyle: 'italic'
+                    }}
+                  >
+                    💡 Be specific: mention colors, layouts, typography, or any special elements you envision
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="border-t border-gray-100 px-8 py-6 bg-gradient-to-r from-gray-50 to-gray-100">
-              <div className="flex justify-between items-center">
-                <Button
-                  variant="outline"
+            <div 
+              style={{
+                padding: '2rem 3rem',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'linear-gradient(180deg, rgba(15, 20, 25, 0.8) 0%, rgba(10, 15, 20, 0.9) 100%)',
+                backdropFilter: 'blur(20px)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1.5rem' }}>
+                <button
                   onClick={() => setIsOpen(false)}
-                  className="px-6 py-3 h-auto text-base font-medium"
+                  className="transition-all duration-300"
+                  style={{
+                    padding: '12px 32px',
+                    fontSize: '0.95rem',
+                    fontWeight: '500',
+                    color: '#94a3b8',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    backdropFilter: 'blur(10px)',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                    e.currentTarget.style.color = '#e2e8f0';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.color = '#94a3b8';
+                  }}
                 >
                   Cancel
-                </Button>
+                </button>
                 
-                <Button
+                <button
                   onClick={handleGenerate}
-                  disabled={isGenerating}
-                  className="px-8 py-3 h-auto text-base font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  disabled={isGenerating || !settings.customPrompt.trim()}
+                  className="transition-all duration-300"
+                  style={{
+                    padding: '12px 36px',
+                    fontSize: '0.95rem',
+                    fontWeight: '600',
+                    color: 'white',
+                    backgroundImage: (isGenerating || !settings.customPrompt.trim())
+                      ? 'linear-gradient(135deg, #64748b 0%, #475569 100%)'
+                      : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%)',
+                    backgroundSize: '200% 100%',
+                    backgroundPosition: '0% 0',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: (isGenerating || !settings.customPrompt.trim()) ? 'not-allowed' : 'pointer',
+                    opacity: (isGenerating || !settings.customPrompt.trim()) ? 0.7 : 1,
+                    boxShadow: (isGenerating || !settings.customPrompt.trim())
+                      ? 'none' 
+                      : '0 8px 32px rgba(59, 130, 246, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isGenerating && settings.customPrompt.trim()) {
+                      e.currentTarget.style.backgroundPosition = '100% 0';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 12px 40px rgba(59, 130, 246, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isGenerating && settings.customPrompt.trim()) {
+                      e.currentTarget.style.backgroundPosition = '0% 0';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(59, 130, 246, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
                 >
-                  {isGenerating ? (
-                    <>
-                      <svg className="w-5 h-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Generating Design...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      Generate Design
-                    </>
-                  )}
-                </Button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    {isGenerating ? (
+                      <>
+                        <div 
+                          style={{
+                            width: '16px',
+                            height: '16px',
+                            border: '2px solid rgba(255, 255, 255, 0.3)',
+                            borderTop: '2px solid white',
+                            borderRadius: '50%',
+                            animation: 'spin 1s linear infinite'
+                          }}
+                        />
+                        Generating Design...
+                      </>
+                    ) : !settings.customPrompt.trim() ? (
+                      <>
+                        <svg style={{ width: '18px', height: '18px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        Select a Style First
+                      </>
+                    ) : (
+                      <>
+                        <svg style={{ width: '18px', height: '18px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Generate Design
+                      </>
+                    )}
+                  </div>
+                </button>
               </div>
             </div>
           </div>

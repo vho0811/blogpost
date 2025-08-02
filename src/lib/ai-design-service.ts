@@ -182,7 +182,7 @@ export default function BlogPostWithDesign({ blogId }: BlogPostWithDesignProps) 
               {new Date(currentBlogPost.published_at || currentBlogPost.created_at || '').toLocaleDateString()}
             </div>
             <div className="text-sm">
-              {currentBlogPost.read_time || 5} min read
+              {currentBlogPost.read_time && currentBlogPost.read_time > 0 ? currentBlogPost.read_time : 5} min read
             </div>
             <button 
               onClick={() => setAiDesignerOpen(true)}
@@ -245,7 +245,7 @@ export default function BlogPostWithDesign({ blogId }: BlogPostWithDesignProps) 
 - Author: "${authorData?.username || authorData?.first_name || 'Unknown Author'}"
 - Author Image: "${authorData?.profile_image_url || 'No image'}"
 - Published Date: "${new Date(blogPost.published_at || blogPost.created_at || '').toLocaleDateString()}"
-- Read Time: "${blogPost.read_time || 5} min read"
+- Read Time: "${blogPost.read_time && blogPost.read_time > 0 ? blogPost.read_time : 5} min read"
 - Category: "${blogPost.category}"
 - Tags: ${blogPost.tags ? JSON.stringify(blogPost.tags) : '[]'}
 - Featured Image: "${blogPost.featured_image_url || 'No image'}"

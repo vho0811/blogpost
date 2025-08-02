@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
 import Link from 'next/link';
 import BlockNoteEditor from '@/components/BlockNoteEditor';
+import { showNotification } from '@/components/BeautifulNotification';
 
 export default function WritePage() {
   const { user, isLoaded } = useUser();
@@ -27,12 +28,43 @@ export default function WritePage() {
 
   const handleSave = useCallback(async (status: 'draft' | 'published') => {
     if (!blogPost.title || !blogPost.content) {
-      alert('Please provide at least a title and content');
+      showNotification('Please provide at least a title and content', 'warning');
       return;
     }
     setIsSaving(true);
     try {
       const slug = blogPost.slug || generateSlug(blogPost.title);
+      
+      // Extract featured image from content or use default
+      const extractedImage = extractFeaturedImage(blogPost.content || '');
+      
+      // Temporary debug - remove this later
+      if (!extractedImage && blogPost.content) {
+        console.log('🔍 DEBUG: No image extracted from content. Content preview:');
+        console.log(blogPost.content.slice(0, 500));
+      }
+      const featuredImageUrl = extractedImage || 'data:image/svg+xml;base64,' + btoa(`
+        <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
+              <stop offset="25%" style="stop-color:#0f172a;stop-opacity:1" />
+              <stop offset="50%" style="stop-color:#334155;stop-opacity:1" />
+              <stop offset="75%" style="stop-color:#1e293b;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+            </linearGradient>
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#334155" stroke-width="0.5" opacity="0.3"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#gradient)"/>
+          <rect width="100%" height="100%" fill="url(#grid)"/>
+          <circle cx="200" cy="150" r="60" fill="#3b82f6" opacity="0.1"/>
+          <circle cx="600" cy="250" r="80" fill="#8b5cf6" opacity="0.08"/>
+          <circle cx="400" cy="200" r="40" fill="#06b6d4" opacity="0.12"/>
+          <text x="400" y="210" text-anchor="middle" fill="#64748b" font-family="Arial, sans-serif" font-size="18" font-weight="600">Blog Post</text>
+        </svg>
+      `);
       
       // Generate initial HTML for the blog post
       const initialHTML = generateInitialHTML(blogPost);
@@ -41,6 +73,7 @@ export default function WritePage() {
         ...blogPost,
         slug,
         status,
+        featured_image_url: featuredImageUrl,
         published_at: status === 'published' ? new Date().toISOString() : undefined,
         // Store the initial HTML in the database
         ai_generated_html: initialHTML,
@@ -65,13 +98,10 @@ export default function WritePage() {
           router.push(`/blog/${result.slug}`);
         }
       } else {
-        console.error('Blog post creation returned null');
-        alert('Failed to save blog post - there might be a duplicate title or slug. Please try a different title.');
+        showNotification('Failed to save blog post - there might be a duplicate title or slug. Please try a different title.', 'error');
       }
     } catch (error: any) {
-      console.error('Error saving blog post:', error);
-      console.error('Error details:', error.message, error.stack);
-      alert('Failed to save blog post - check console for details');
+      showNotification('Failed to save blog post. Please try again.', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -83,6 +113,24 @@ export default function WritePage() {
     const authorName = user?.firstName || user?.username || 'User';
     const authorInitial = authorName.charAt(0).toUpperCase();
     const authorImage = user?.imageUrl || '';
+    
+    // Calculate read time if not already set
+    const calculateReadTime = (content: string): number => {
+      if (!content) return 1;
+      const text = content
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .trim();
+      const words = text.split(/\s+/).filter(word => word.length > 0);
+      return Math.max(Math.ceil(words.length / 200), 1);
+    };
+    
+    // Use actual read time or calculate it
+    const readTime = (post.read_time && post.read_time > 0) ? post.read_time : calculateReadTime(post.content || '');
     
     return `
 <!DOCTYPE html>
@@ -282,7 +330,7 @@ export default function WritePage() {
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                ${post.read_time || 5} min read
+                                ${readTime} min read
                             </span>
                             <span>
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,6 +343,7 @@ export default function WritePage() {
                 </section>
                 
                 <section class="content">
+                    ${post.featured_image_url ? `<img src="${post.featured_image_url}" alt="${post.title}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 10px; margin-bottom: 2rem; box-shadow: 0 8px 25px rgba(0,0,0,0.4);" />` : ''}
                     ${post.content}
                 </section>
             </main>
@@ -317,6 +366,49 @@ export default function WritePage() {
     return `${baseSlug}-${timestamp}`;
   };
 
+  // Extract the FIRST image from content for featured image
+  const extractFeaturedImage = (content: string): string | undefined => {
+    if (!content) return undefined;
+
+    try {
+      // Check if content is JSON (BlockNote format)
+      if (content.startsWith('[') && content.endsWith(']')) {
+        const blocks = JSON.parse(content);
+        
+        // Iterate through blocks in order to find the FIRST image
+        for (let i = 0; i < blocks.length; i++) {
+          const block = blocks[i];
+          
+          // Check for different possible image block structures
+          if (block.type === 'image') {
+            // Try different possible paths for the image URL
+            const imageUrl = block.props?.url || 
+                           block.props?.src || 
+                           block.content?.url || 
+                           block.content?.src ||
+                           block.url ||
+                           block.src;
+            
+            if (imageUrl) {
+              return imageUrl;
+            }
+          }
+        }
+      } else {
+        // Check HTML content for the FIRST image
+        const imgRegex = /<img[^>]+src=["']([^"'>]+)["'][^>]*>/i;
+        const match = content.match(imgRegex);
+        if (match && match[1]) {
+          return match[1];
+        }
+      }
+    } catch (error) {
+      // Error parsing content for images - silently fail
+    }
+
+    return undefined;
+  };
+
   // Redirect if not logged in
   useEffect(() => {
     if (isLoaded && !user) {
@@ -335,7 +427,7 @@ export default function WritePage() {
             setBlogPost(existingPost);
           }
         } catch (error) {
-          console.error('Error loading blog post:', error);
+          // Error loading blog post for editing
         }
       }
     };

@@ -11,13 +11,13 @@ export function UserSync() {
     const syncUser = async () => {
       if (isLoaded && user) {
         try {
-          console.log('Syncing user to Supabase:', user.id);
+      
           
           // Pass the entire Clerk user object to createOrUpdateUser
           const result = await blogDatabase.createOrUpdateUser(user);
           
           if (result) {
-            console.log('User synced successfully to Supabase:', result);
+      
           } else {
             console.error('Failed to sync user to Supabase');
           }

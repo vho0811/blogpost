@@ -128,11 +128,11 @@ IMPORTANT: The user specifically wants "${request.designPrompt}". Make sure the 
   // Generate complete page redesign
   async redesignPage(designPrompt: string, targetFile: string): Promise<boolean> {
     try {
-      console.log('Starting page redesign for:', targetFile);
+    
       
       // 1. Analyze current structure
       const currentStructure = await this.analyzeCurrentStructure(targetFile);
-      console.log('Current structure analyzed:', currentStructure);
+    
 
       // 2. Generate new component code
       const redesignRequest: RedesignRequest = {
@@ -145,13 +145,13 @@ IMPORTANT: The user specifically wants "${request.designPrompt}". Make sure the 
       };
 
       const generatedCode = await this.generateRedesignedComponent(redesignRequest);
-      console.log('Generated new code:', generatedCode);
+    
 
       // 3. Apply changes to file
       const success = await this.applyCodeChanges(targetFile, generatedCode);
       
       if (success) {
-        console.log('Page redesign completed successfully!');
+      
         return true;
       } else {
         console.error('Failed to apply code changes');

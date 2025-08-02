@@ -14,7 +14,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Debug Clerk state
-  console.log('Clerk state:', { isSignedIn, isLoaded, user: !!user });
+
 
   // Fetch blog posts from database
   useEffect(() => {
@@ -37,6 +37,8 @@ export default function Home() {
     };
 
     fetchBlogPosts();
+
+
   }, []);
 
   return (
@@ -79,7 +81,7 @@ export default function Home() {
                   ) : (
                     <div className="flex items-center space-x-3">
                       <SignInButton mode="modal">
-                        <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-400 hover:to-purple-500 transition-all cursor-pointer">
+                        <button className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-400 hover:to-purple-500 transition-all duration-300 cursor-pointer font-medium shadow-lg hover:shadow-blue-500/25 hover:scale-105 border border-blue-400/30">
                           Sign In
                         </button>
                       </SignInButton>
@@ -164,7 +166,7 @@ export default function Home() {
                   
                   <div className="absolute top-8 right-8">
                     <div className="flex items-center space-x-2 text-white/80">
-                      <span className="text-sm">{featuredPost.read_time || 5} min read</span>
+                      <span className="text-sm">{featuredPost.read_time && featuredPost.read_time > 0 ? featuredPost.read_time : 5} min read</span>
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                     </div>
                   </div>
@@ -223,25 +225,25 @@ export default function Home() {
                       <span>Reading Progress</span>
                       <span>Featured Story</span>
                     </div>
-                    <div className="w-full h-3 bg-gray-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-1000 group-hover:w-full" style={{ width: '0%' }}></div>
+                    <div className="w-full h-3 bg-gray-800/60 rounded-full overflow-hidden border border-gray-700/50">
+                      <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-1000 ease-out group-hover:w-full shadow-lg shadow-blue-500/20" style={{ width: '0%' }}></div>
                     </div>
                   </div>
 
                   {/* Call to Action */}
                   <div className="mt-8 flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <button className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors duration-200 cursor-pointer">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <button className="group flex items-center space-x-2 text-gray-400 hover:text-white transition-all duration-300 cursor-pointer bg-gray-800/40 hover:bg-gray-700/60 px-4 py-2 rounded-lg border border-gray-700/50 hover:border-gray-600/70 backdrop-blur-sm hover:shadow-lg hover:shadow-blue-500/10">
+                        <svg className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
-                        <span>Save</span>
+                        <span className="font-medium">Save</span>
                       </button>
-                      <button className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors duration-200 cursor-pointer">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <button className="group flex items-center space-x-2 text-gray-400 hover:text-white transition-all duration-300 cursor-pointer bg-gray-800/40 hover:bg-gray-700/60 px-4 py-2 rounded-lg border border-gray-700/50 hover:border-gray-600/70 backdrop-blur-sm hover:shadow-lg hover:shadow-purple-500/10">
+                        <svg className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                         </svg>
-                        <span>Share</span>
+                        <span className="font-medium">Share</span>
                       </button>
                     </div>
                     <div className="flex items-center space-x-2 text-white font-semibold">
@@ -290,7 +292,7 @@ export default function Home() {
                       {/* Read Time */}
                       <div className="absolute top-4 right-4">
                         <span className="text-white/80 text-xs bg-black/50 px-2 py-1 rounded">
-                          {post.read_time || 5} min read
+                          {post.read_time && post.read_time > 0 ? post.read_time : 5} min read
                         </span>
                       </div>
                     </div>
@@ -371,7 +373,7 @@ export default function Home() {
               </Link>
             ) : (
               <SignInButton mode="modal">
-                <button className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full hover:from-blue-400 hover:to-purple-500 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer">
+                <button className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full hover:from-blue-400 hover:to-purple-500 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/30 cursor-pointer border border-blue-400/20">
                   Sign In to Start
                   <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

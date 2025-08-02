@@ -3,6 +3,160 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* shadcn/ui CSS Variables */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+}
+
+@layer utilities {
+  .bg-background { background-color: hsl(var(--background)); }
+  .bg-foreground { background-color: hsl(var(--foreground)); }
+  .bg-card { background-color: hsl(var(--card)); }
+  .bg-card-foreground { background-color: hsl(var(--card-foreground)); }
+  .bg-popover { background-color: hsl(var(--popover)); }
+  .bg-popover-foreground { background-color: hsl(var(--popover-foreground)); }
+  .bg-primary { background-color: hsl(var(--primary)); }
+  .bg-primary-foreground { background-color: hsl(var(--primary-foreground)); }
+  .bg-secondary { background-color: hsl(var(--secondary)); }
+  .bg-secondary-foreground { background-color: hsl(var(--secondary-foreground)); }
+  .bg-muted { background-color: hsl(var(--muted)); }
+  .bg-muted-foreground { background-color: hsl(var(--muted-foreground)); }
+  .bg-accent { background-color: hsl(var(--accent)); }
+  .bg-accent-foreground { background-color: hsl(var(--accent-foreground)); }
+  .bg-destructive { background-color: hsl(var(--destructive)); }
+  .bg-destructive-foreground { background-color: hsl(var(--destructive-foreground)); }
+  .bg-border { background-color: hsl(var(--border)); }
+  .bg-input { background-color: hsl(var(--input)); }
+  .bg-ring { background-color: hsl(var(--ring)); }
+  
+  .text-background { color: hsl(var(--background)); }
+  .text-foreground { color: hsl(var(--foreground)); }
+  .text-card { color: hsl(var(--card)); }
+  .text-card-foreground { color: hsl(var(--card-foreground)); }
+  .text-popover { color: hsl(var(--popover)); }
+  .text-popover-foreground { color: hsl(var(--popover-foreground)); }
+  .text-primary { color: hsl(var(--primary)); }
+  .text-primary-foreground { color: hsl(var(--primary-foreground)); }
+  .text-secondary { color: hsl(var(--secondary)); }
+  .text-secondary-foreground { color: hsl(var(--secondary-foreground)); }
+  .text-muted { color: hsl(var(--muted)); }
+  .text-muted-foreground { color: hsl(var(--muted-foreground)); }
+  .text-accent { color: hsl(var(--accent)); }
+  .text-accent-foreground { color: hsl(var(--accent-foreground)); }
+  .text-destructive { color: hsl(var(--destructive)); }
+  .text-destructive-foreground { color: hsl(var(--destructive-foreground)); }
+  .text-border { color: hsl(var(--border)); }
+  .text-input { color: hsl(var(--input)); }
+  .text-ring { color: hsl(var(--ring)); }
+  
+  .border-background { border-color: hsl(var(--background)); }
+  .border-foreground { border-color: hsl(var(--foreground)); }
+  .border-card { border-color: hsl(var(--card)); }
+  .border-card-foreground { border-color: hsl(var(--card-foreground)); }
+  .border-popover { border-color: hsl(var(--popover)); }
+  .border-popover-foreground { border-color: hsl(var(--popover-foreground)); }
+  .border-primary { border-color: hsl(var(--primary)); }
+  .border-primary-foreground { border-color: hsl(var(--primary-foreground)); }
+  .border-secondary { border-color: hsl(var(--secondary)); }
+  .border-secondary-foreground { border-color: hsl(var(--secondary-foreground)); }
+  .border-muted { border-color: hsl(var(--muted)); }
+  .border-muted-foreground { border-color: hsl(var(--muted-foreground)); }
+  .border-accent { border-color: hsl(var(--accent)); }
+  .border-accent-foreground { border-color: hsl(var(--accent-foreground)); }
+  .border-destructive { border-color: hsl(var(--destructive)); }
+  .border-destructive-foreground { border-color: hsl(var(--destructive-foreground)); }
+  .border-border { border-color: hsl(var(--border)); }
+  .border-input { border-color: hsl(var(--input)); }
+  .border-ring { border-color: hsl(var(--ring)); }
+}
+
+/* Modern Professional Hover Effects */
+@layer components {
+  /* Subtle card hover effect - NO SIZE CHANGES */
+  .hover-card {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .hover-card:hover {
+    @apply shadow-lg shadow-gray-200/50;
+  }
+  
+  /* Professional button hover - NO SIZE CHANGES */
+  .hover-button {
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .hover-button:hover {
+    @apply shadow-md;
+  }
+  
+  /* Subtle text hover */
+  .hover-text {
+    @apply transition-colors duration-200 ease-out;
+  }
+  
+  .hover-text:hover {
+    @apply text-blue-600;
+  }
+  
+  /* Modern link hover */
+  .hover-link {
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .hover-link:hover {
+    @apply text-blue-600 underline decoration-blue-600/30 underline-offset-4;
+  }
+  
+  /* Professional input focus */
+  .focus-input {
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .focus-input:focus {
+    @apply ring-2 ring-blue-500/20 border-blue-500 shadow-sm;
+  }
+  
+  /* Smooth button hover - NO TRANSFORM */
+  .smooth-button {
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .smooth-button:hover {
+    @apply shadow-lg;
+  }
+  
+  /* Subtle card hover - NO SCALE */
+  .smooth-card {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .smooth-card:hover {
+    @apply shadow-xl shadow-gray-200/60;
+  }
+
+
+}
+
 /* Your original custom styles */
 body {
   font-family: Arial, Helvetica, sans-serif;
@@ -180,6 +334,24 @@ html {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Animation classes */
 .animate-float {
   animation: float 6s ease-in-out infinite;
@@ -216,26 +388,6 @@ html {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Interactive hover effects */
-.hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
-
-/* Color psychology specific styles */
-.color-card {
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.color-card:hover {
-  transform: scale(1.05) rotate(2deg);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
 }
 
 /* Text gradient effects */

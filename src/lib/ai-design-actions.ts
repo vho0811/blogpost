@@ -336,7 +336,7 @@ function generateBasicHTMLTemplate(blogData: BlogPost, settings: AIWebsiteSettin
                 
                 <div class="meta">
                     <span>${new Date(blogData.published_at || blogData.created_at || '').toLocaleDateString()}</span>
-                    <span>${blogData.read_time || 5} min read</span>
+                    <span>${blogData.read_time && blogData.read_time > 0 ? blogData.read_time : 5} min read</span>
                     <span>${blogData.category}</span>
                 </div>
             </div>

@@ -102,7 +102,7 @@ const modifyHTMLWithAI = async (existingHTML: string, blogPost: BlogPost, themeP
   
   if (!promptAnalysis.isValid) {
     // Return original HTML if prompt is not valid
-    console.log('Invalid prompt detected, returning original HTML');
+
     return existingHTML;
   }
 
@@ -142,7 +142,7 @@ Title: ${blogPost.title}
 Subtitle: ${blogPost.subtitle || ''}
 Content: ${blogPost.content}
 Category: ${blogPost.category || 'General'}
-Read Time: ${blogPost.read_time || 5} min read
+Read Time: ${blogPost.read_time && blogPost.read_time > 0 ? blogPost.read_time : 5} min read
 
 DESIGN REQUIREMENTS:
 ${promptAnalysis.enhancedPrompt}

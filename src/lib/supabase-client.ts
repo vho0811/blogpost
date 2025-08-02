@@ -144,7 +144,7 @@ export class DesignDatabase {
     try {
       // This would apply the reverted design to the file
       // Implementation depends on your file system access
-      console.log('Applying reverted design:', design);
+    
       return true;
     } catch (error) {
       console.error('Error applying reverted design:', error);

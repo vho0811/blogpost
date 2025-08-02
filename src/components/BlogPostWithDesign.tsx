@@ -58,7 +58,7 @@ export default function BlogPostWithDesign({ blogId }: BlogPostWithDesignProps) 
     if (!customComponent || !currentBlogPost) return null;
     
     try {
-      console.log('🎨 Rendering AI-generated component:', customComponent);
+  
       
       // Create a dynamic component that safely renders the AI-generated code
       // We'll use a sandboxed approach to execute the AI's creative design
@@ -225,7 +225,7 @@ export default function BlogPostWithDesign({ blogId }: BlogPostWithDesignProps) 
                     {new Date(currentBlogPost.published_at || currentBlogPost.created_at || '').toLocaleDateString()}
                   </div>
                   <div className="text-sm text-gray-400">
-                    {currentBlogPost.read_time || 5} min read
+                    {currentBlogPost.read_time && currentBlogPost.read_time > 0 ? currentBlogPost.read_time : 5} min read
                   </div>
                   <button 
                     onClick={() => setAiDesignerOpen(true)}
@@ -379,11 +379,11 @@ export default function BlogPostWithDesign({ blogId }: BlogPostWithDesignProps) 
                 {new Date(currentBlogPost.published_at || currentBlogPost.created_at || '').toLocaleDateString()}
               </div>
               <div className="text-sm text-gray-400">
-                {currentBlogPost.read_time || 5} min read
+                {currentBlogPost.read_time && currentBlogPost.read_time > 0 ? currentBlogPost.read_time : 5} min read
               </div>
               <button 
                 onClick={() => {
-                  console.log('🎨 React Design button clicked!');
+              
                   setAiDesignerOpen(true);
                 }}
                 className="ml-auto bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:from-blue-400 hover:to-purple-500 transition-all duration-200 flex items-center gap-2 hover:scale-105"

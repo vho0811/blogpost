@@ -5,6 +5,8 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
 import Link from 'next/link';
+import { showNotification } from '@/components/BeautifulNotification';
+import DeleteConfirmModal from '@/components/DeleteConfirmModal';
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
@@ -13,6 +15,11 @@ export default function DashboardPage() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; postId: string; postTitle: string }>({
+    isOpen: false,
+    postId: '',
+    postTitle: ''
+  });
 
   // Redirect if not logged in
   useEffect(() => {
@@ -35,8 +42,8 @@ export default function DashboardPage() {
         const posts = await blogDatabase.getUserBlogPosts(user.id, filter === 'all' ? undefined : filter);
         setBlogPosts(posts);
       }
-    } catch (error) {
-      console.error('Error loading blog posts:', error);
+          } catch (error) {
+        // Error loading blog posts
     } finally {
       setLoading(false);
     }
@@ -44,22 +51,34 @@ export default function DashboardPage() {
 
 
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this blog post?')) return;
-    
+  const handleDeleteClick = (id: string, title: string) => {
+    setDeleteModal({
+      isOpen: true,
+      postId: id,
+      postTitle: title
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
       if (user) {
-        const success = await blogDatabase.deleteBlogPost(id, user.id);
+        const success = await blogDatabase.deleteBlogPost(deleteModal.postId, user.id);
         if (success) {
-          setBlogPosts(posts => posts.filter(post => post.id !== id));
+          setBlogPosts(posts => posts.filter(post => post.id !== deleteModal.postId));
+          showNotification('Blog post deleted successfully', 'success');
         } else {
-          alert('Failed to delete blog post');
+          showNotification('Failed to delete blog post', 'error');
         }
       }
     } catch (error) {
-      console.error('Error deleting blog post:', error);
-      alert('Failed to delete blog post');
+      showNotification('Failed to delete blog post', 'error');
+    } finally {
+      setDeleteModal({ isOpen: false, postId: '', postTitle: '' });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, postId: '', postTitle: '' });
   };
 
   const handleStatusChange = async (id: string, status: 'draft' | 'published' | 'archived') => {
@@ -70,13 +89,13 @@ export default function DashboardPage() {
           setBlogPosts(posts => posts.map(post => 
             post.id === id ? { ...post, status } : post
           ));
+          showNotification(`Blog post ${status === 'published' ? 'published' : status === 'archived' ? 'archived' : 'saved as draft'}`, 'success');
         } else {
-          alert('Failed to update blog post status');
+          showNotification('Failed to update blog post status', 'error');
         }
       }
     } catch (error) {
-      console.error('Error updating blog post status:', error);
-      alert('Failed to update blog post status');
+      showNotification('Failed to update blog post status', 'error');
     }
   };
 
@@ -281,10 +300,10 @@ export default function DashboardPage() {
                     {post.status === 'published' && (
                       <Link
                         href={`/blog/${post.slug}`}
-                        className="p-2 text-gray-400 hover:text-blue-400 transition-colors"
+                        className="p-2 text-gray-400 hover:text-blue-400 transition-colors cursor-pointer"
                         title="View Post"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
@@ -293,10 +312,10 @@ export default function DashboardPage() {
                     
                     <Link
                       href={`/write?id=${post.id}`}
-                      className="p-2 text-gray-400 hover:text-green-400 transition-colors"
+                      className="p-2 text-gray-400 hover:text-green-400 transition-colors cursor-pointer"
                       title="Edit Post"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </Link>
@@ -304,7 +323,7 @@ export default function DashboardPage() {
                     <select
                       value={post.status}
                       onChange={(e) => handleStatusChange(post.id!, e.target.value as any)}
-                      className="bg-gray-700 text-white text-sm rounded px-2 py-1 border border-gray-600 focus:ring-2 focus:ring-blue-500"
+                      className="bg-gray-700 text-white text-sm rounded px-2 py-1 border border-gray-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
                     >
                       <option value="draft">Draft</option>
                       <option value="published">Published</option>
@@ -312,11 +331,11 @@ export default function DashboardPage() {
                     </select>
                     
                     <button
-                      onClick={() => handleDelete(post.id!)}
-                      className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                      onClick={() => handleDeleteClick(post.id!, post.title)}
+                      className="p-2 text-gray-400 hover:text-red-400 transition-colors cursor-pointer"
                       title="Delete Post"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
@@ -327,6 +346,15 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="Delete Blog Post"
+        message={`Are you sure you want to delete "${deleteModal.postTitle}"? This action cannot be undone.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </div>
   );
 }

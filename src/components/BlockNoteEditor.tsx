@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { PartialBlock } from '@blocknote/core';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
@@ -24,15 +24,39 @@ export default function BlockNoteEditor({
 
   // Convert HTML to BlockNote blocks on initial load
   const initialBlocks = useMemo(() => {
-    if (initialContent) {
+    if (initialContent && initialContent.trim()) {
       try {
-        // Simple HTML to blocks conversion
-        const htmlContent = initialContent.replace(/<[^>]*>/g, '');
-        const paragraphs = htmlContent.split('\n').filter(p => p.trim());
+        // Check if content is already in JSON format (BlockNote blocks)
+        if (initialContent.startsWith('[') && initialContent.endsWith(']')) {
+          try {
+            const parsed = JSON.parse(initialContent);
+            if (Array.isArray(parsed)) {
+              return parsed;
+            }
+          } catch (jsonError) {
+            // Fall through to HTML processing
+          }
+        }
+
+        // Process as HTML content
+        const cleanText = initialContent
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<\/p>/gi, '\n')
+          .replace(/<[^>]*>/g, '')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"');
+
+        const paragraphs = cleanText
+          .split('\n')
+          .map(p => p.trim())
+          .filter(p => p.length > 0);
         
         const blocks: PartialBlock[] = paragraphs.map(text => ({
           type: 'paragraph' as const,
-          content: text.trim(),
+          content: text,
         }));
         
         return blocks.length > 0 ? blocks : [{ type: 'paragraph' as const, content: '' }];
@@ -40,9 +64,8 @@ export default function BlockNoteEditor({
         console.error('Error parsing initial content:', error);
         return [{ type: 'paragraph' as const, content: '' }];
       }
-    } else {
-      return [{ type: 'paragraph' as const, content: '' }];
     }
+    return [{ type: 'paragraph' as const, content: '' }];
   }, [initialContent]);
 
   // Custom upload function for images
@@ -61,10 +84,13 @@ export default function BlockNoteEditor({
     }
   };
 
-  // Create the editor instance
+  // Create the editor instance with full formatting features
   const editor = useCreateBlockNote({
     initialContent: initialBlocks,
     uploadFile,
+    // Explicitly enable all default features
+    trailingBlock: true,
+    animations: true,
   });
 
   // Handle content changes
@@ -85,6 +111,10 @@ export default function BlockNoteEditor({
           onChange={handleChange}
           theme="dark"
           className="blocknote-editor"
+          formattingToolbar={true}
+          linkToolbar={true}
+          sideMenu={true}
+          slashMenu={true}
         />
       </div>
       
@@ -95,23 +125,19 @@ export default function BlockNoteEditor({
         
         .bn-container {
           background: transparent !important;
-          color: #ffffff !important;
         }
         
         .bn-editor {
           background: transparent !important;
-          color: #ffffff !important;
         }
         
         .ProseMirror {
           background: transparent !important;
-          color: #ffffff !important;
           padding: 1rem !important;
           min-height: 300px !important;
         }
         
         .ProseMirror p {
-          color: #ffffff !important;
           margin: 0.5rem 0 !important;
         }
         
@@ -121,13 +147,11 @@ export default function BlockNoteEditor({
         .ProseMirror h4,
         .ProseMirror h5,
         .ProseMirror h6 {
-          color: #ffffff !important;
           font-weight: bold !important;
         }
         
         .ProseMirror ul,
         .ProseMirror ol {
-          color: #ffffff !important;
           padding-left: 1.5rem !important;
         }
         

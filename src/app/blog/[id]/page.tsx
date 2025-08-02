@@ -1,5 +1,6 @@
 import BlogContent from '@/components/BlogContent';
 import SimpleAIDesignButton from '@/components/SimpleAIDesignButton';
+import ReadingProgressBar from '@/components/ReadingProgressBar';
 import Link from 'next/link';
 
 export default async function BlogPost({ params }: { params: Promise<{ id: string }> }) {
@@ -7,6 +8,9 @@ export default async function BlogPost({ params }: { params: Promise<{ id: strin
   
   return (
     <>
+      {/* Reading Progress Bar - Fixed at top level */}
+      <ReadingProgressBar />
+      
       {/* Floating Buttons - Completely separate from HTML content */}
       <div className="fixed top-10 left-10 z-[9999]" style={{ isolation: 'isolate', contain: 'layout style paint' }}>
         <Link href="/" className="group bg-gray-900/95 backdrop-blur-md text-white px-10 py-5 rounded-2xl font-semibold hover:bg-gray-800/95 transition-all duration-300 flex items-center gap-5 shadow-2xl border border-gray-700/30 hover:border-gray-600/50 hover:shadow-gray-900/25 hover:scale-105 leading-tight" style={{ all: 'unset', display: 'flex', alignItems: 'center', gap: '1.25rem', backgroundColor: 'rgba(17, 24, 39, 0.95)', backdropFilter: 'blur(12px)', color: 'white', padding: '1.25rem 2.5rem', borderRadius: '1rem', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid rgba(55, 65, 81, 0.3)', textDecoration: 'none', fontSize: '1.125rem', letterSpacing: '0.025em', lineHeight: '1.25', cursor: 'pointer', zIndex: 9999 }}>
