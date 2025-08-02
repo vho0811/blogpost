@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { blogPostId, action, themePrompt } = body;
+    const { blogPostId, themePrompt } = body;
 
     if (!blogPostId) {
       return NextResponse.json({
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Error in AI design API:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json({

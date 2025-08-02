@@ -34,7 +34,6 @@ export default function DashboardPage() {
     if (user) {
       loadBlogPosts();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, filter]);
 
   const loadBlogPosts = async () => {
@@ -44,13 +43,13 @@ export default function DashboardPage() {
         const posts = await blogDatabase.getUserBlogPosts(user.id, filter === 'all' ? undefined : filter);
         setBlogPosts(posts);
       }
-          } catch (error) {
-        console.error('Error loading blog posts:', error);
-        setBlogPosts([]);
-      } finally {
+    } catch (error) {
+      console.error('Error loading blog posts:', error);
+      setBlogPosts([]);
+    } finally {
       setLoading(false);
     }
-  }, [user, filter]);
+  };
 
 
 
@@ -73,7 +72,7 @@ export default function DashboardPage() {
           showNotification('Failed to delete blog post', 'error');
         }
       }
-    } catch (error: unknown) {
+    } catch (error) {
       showNotification('Failed to delete blog post', 'error');
     } finally {
       setDeleteModal({ isOpen: false, postId: '', postTitle: '' });
@@ -97,7 +96,7 @@ export default function DashboardPage() {
           showNotification('Failed to update blog post status', 'error');
         }
       }
-    } catch (error: unknown) {
+    } catch (error) {
       showNotification('Failed to update blog post status', 'error');
     }
   };
