@@ -1,13 +1,7 @@
 import { blogDatabase, type BlogPost, type AIWebsiteSettings } from './blog-database';
 import { aiService } from './ai-service';
 
-interface ContentAnalysis {
-  suggestedStyle: string;
-  suggestedColorScheme: string;
-  contentType: string;
-  tone: string;
-  complexity: string;
-}
+
 
 export async function generateAIDesign(docId: string) {
   try {
@@ -93,7 +87,7 @@ Return as JSON:
         // Try to parse JSON response
         const analysis = JSON.parse(response.content);
         return analysis;
-      } catch (parseError) {
+      } catch {
         // Fallback to default analysis
         return getDefaultAnalysis(blogData);
       }

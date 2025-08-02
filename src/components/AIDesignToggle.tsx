@@ -76,7 +76,7 @@ export default function AIDesignToggle({ docId, onDesignApplied }: AIDesignToggl
       } else {
         showNotification('Failed to generate AI design. Please try again.', 'error');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       showNotification('Failed to generate AI design. Please try again.', 'error');
     } finally {
       setIsGenerating(false);

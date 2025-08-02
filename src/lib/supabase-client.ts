@@ -9,7 +9,7 @@ export interface DesignHistory {
   id?: string;
   design_prompt: string;
   target_file: string;
-  generated_code: any;
+  generated_code: string;
   applied_at: string;
   success: boolean;
   user_id?: string;
@@ -20,7 +20,7 @@ export interface DesignTemplate {
   name: string;
   description: string;
   prompt: string;
-  code_structure: any;
+  code_structure: string;
   created_at: string;
   user_id?: string;
 }
@@ -140,7 +140,7 @@ export class DesignDatabase {
     }
   }
 
-  private async applyRevertedDesign(design: DesignHistory): Promise<boolean> {
+  private async applyRevertedDesign(): Promise<boolean> {
     try {
       // This would apply the reverted design to the file
       // Implementation depends on your file system access

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { designDatabase } from '@/lib/supabase-client';
+
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
 import { useUser } from '@clerk/nextjs';
 import { showNotification } from './BeautifulNotification';
@@ -23,12 +23,6 @@ interface BlogAIDesignerProps {
 export default function BlogAIDesigner({
   blogId,
   blogSlug,
-  initialContent,
-  initialTitle,
-  initialSubtitle,
-  onContentUpdate,
-  onTitleUpdate,
-  onSubtitleUpdate,
   isOpen: externalIsOpen,
   onClose,
   onDesignApplied
@@ -46,7 +40,6 @@ export default function BlogAIDesigner({
   const [isRedesigning, setIsRedesigning] = useState(false);
   const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
   const [loadingBlog, setLoadingBlog] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState('');
   const [isOwner, setIsOwner] = useState(false);
 
   // Load blog post data from database
@@ -90,7 +83,6 @@ export default function BlogAIDesigner({
           
           // Note: Design theme and prompt columns were removed from database
           // Design state is now managed locally in the component
-          setSelectedTheme('');
           setDesignPrompt('');
         } else {
   
@@ -151,7 +143,7 @@ export default function BlogAIDesigner({
         showNotification(`❌ Design failed: ${result.error || 'Unknown error'}`, 'error');
       }
       
-    } catch (error) {
+    } catch (error: unknown) {
       showNotification('💥 Failed to redesign blog post. Please try again.', 'error');
     } finally {
       setIsRedesigning(false);
@@ -194,7 +186,7 @@ export default function BlogAIDesigner({
         showNotification(`Reset failed: ${result.error}`, 'error');
       }
       
-    } catch (error) {
+    } catch (error: unknown) {
       showNotification('Failed to reset blog post. Please try again.', 'error');
     } finally {
       setIsRedesigning(false);

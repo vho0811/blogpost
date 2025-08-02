@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useMemo } from 'react';
 import { PartialBlock } from '@blocknote/core';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
@@ -17,8 +17,7 @@ interface BlockNoteEditorProps {
 
 export default function BlockNoteEditor({
   initialContent = '',
-  onChange,
-  placeholder = 'Start writing your blog post...'
+  onChange
 }: BlockNoteEditorProps) {
   const { user } = useUser();
 
@@ -33,7 +32,7 @@ export default function BlockNoteEditor({
             if (Array.isArray(parsed)) {
               return parsed;
             }
-          } catch (jsonError) {
+          } catch {
             // Fall through to HTML processing
           }
         }

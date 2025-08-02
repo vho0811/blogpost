@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
@@ -43,7 +43,7 @@ export default function DashboardPage() {
         const posts = await blogDatabase.getUserBlogPosts(user.id, filter === 'all' ? undefined : filter);
         setBlogPosts(posts);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error loading blog posts:', error);
       setBlogPosts([]);
     } finally {
@@ -72,7 +72,7 @@ export default function DashboardPage() {
           showNotification('Failed to delete blog post', 'error');
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       showNotification('Failed to delete blog post', 'error');
     } finally {
       setDeleteModal({ isOpen: false, postId: '', postTitle: '' });
@@ -96,7 +96,7 @@ export default function DashboardPage() {
           showNotification('Failed to update blog post status', 'error');
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       showNotification('Failed to update blog post status', 'error');
     }
   };

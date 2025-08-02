@@ -100,7 +100,7 @@ export default function WritePage() {
       } else {
         showNotification('Failed to save blog post - there might be a duplicate title or slug. Please try a different title.', 'error');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       showNotification('Failed to save blog post. Please try again.', 'error');
     } finally {
       setIsSaving(false);

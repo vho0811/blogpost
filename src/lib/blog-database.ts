@@ -105,7 +105,23 @@ export class BlogDatabase {
   private supabase = supabase;
 
   // User Management
-  async createOrUpdateUser(clerkUser: any): Promise<User | null> {
+  async createOrUpdateUser(clerkUser: { 
+    id?: string; 
+    clerk_user_id?: string;
+    email?: string;
+    emailAddresses?: Array<{ emailAddress?: string }>;
+    primaryEmailAddress?: { emailAddress?: string };
+    username?: string;
+    firstName?: string;
+    first_name?: string;
+    lastName?: string;
+    last_name?: string;
+    imageUrl?: string;
+    profileImageUrl?: string;
+    profile?: { imageUrl?: string };
+    externalAccounts?: Array<{ imageUrl?: string }>;
+    profile_image_url?: string;
+  }): Promise<User | null> {
     try {
       
       // Extract email properly
@@ -152,9 +168,11 @@ export class BlogDatabase {
 
       
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating/updating user:', error);
-      console.error('Error stack:', error.stack);
+      if (error instanceof Error) {
+        console.error('Error stack:', error.stack);
+      }
       return null;
     }
   }
@@ -248,9 +266,11 @@ export class BlogDatabase {
 
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating blog post:', error);
-      console.error('Error stack:', error.stack);
+      if (error instanceof Error) {
+        console.error('Error stack:', error.stack);
+      }
       return null;
     }
   }
@@ -288,7 +308,7 @@ export class BlogDatabase {
       }
 
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       return null;
     }
   }
@@ -443,7 +463,7 @@ export class BlogDatabase {
       const filePath = `${currentUser.id}/${fileName}`;
 
       // Upload file to Supabase storage
-      const { data: uploadData, error: uploadError } = await this.supabase.storage
+      const { error: uploadError } = await this.supabase.storage
         .from('media')
         .upload(filePath, file);
 
@@ -928,7 +948,7 @@ export class BlogDatabase {
       const newHTML = this.generateInitialHTMLTemplate(blogPost);
 
       // Update the blog post with new HTML
-      const { data, error } = await this.supabase
+      const { error } = await this.supabase
         .from('blog_posts')
         .update({ 
           html_code: newHTML,

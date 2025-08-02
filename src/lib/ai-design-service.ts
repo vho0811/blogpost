@@ -1,5 +1,5 @@
 import { aiService } from './ai-service';
-import { blogDatabase, type BlogPost, type DesignConfig } from './blog-database';
+import { blogDatabase, type BlogPost } from './blog-database';
 
 interface DesignRequest {
   blogPostId: string;
@@ -362,7 +362,7 @@ Return the complete React component code with your revolutionary design applied.
   }
 
   // Save designed blog post to database
-  async saveDesignedBlogPost(blogPostId: string, designResult: DesignResult): Promise<boolean> {
+  async saveDesignedBlogPost(blogPostId: string): Promise<boolean> {
     try {
       // For now, we'll store the React component code in the database
       // In a real implementation, you might want to store it as a file or in a different table

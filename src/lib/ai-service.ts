@@ -168,7 +168,7 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
       try {
         const enhancedPost = JSON.parse(response) as EnhancedBlogPost;
         return enhancedPost;
-      } catch (parseError) {
+      } catch {
   
         // Return the response as content
         return {
@@ -216,7 +216,7 @@ Return as a JSON array of strings.
           temperature: this.config.temperature,
           messages: [{ role: 'user', content: prompt }],
         });
-        response = (anthropicResponse.content[0] as any)?.text || '';
+        response = (anthropicResponse.content[0] as { text?: string })?.text || '';
       } else if (this.openai) {
         const openaiResponse = await this.openai.chat.completions.create({
           model: this.config.model,
@@ -277,7 +277,7 @@ Return as a JSON array of strings.
           temperature: this.config.temperature,
           messages: [{ role: 'user', content: prompt }],
         });
-        response = (anthropicResponse.content[0] as any)?.text || '';
+        response = (anthropicResponse.content[0] as { text?: string })?.text || '';
       } else if (this.openai) {
         const openaiResponse = await this.openai.chat.completions.create({
           model: this.config.model,
@@ -350,7 +350,7 @@ Return as a JSON array of strings.
 
 // Export singleton instance
 export const aiService = new AIService({
-  provider: (process.env.AI_PROVIDER as any) || 'anthropic',
+  provider: (process.env.AI_PROVIDER as 'openai' | 'anthropic' | 'google' | 'ollama') || 'anthropic',
   model: process.env.AI_MODEL || 'claude-3-5-sonnet-20241022',
   temperature: parseFloat(process.env.AI_TEMPERATURE || '0.7'),
   maxTokens: parseInt(process.env.MAX_TOKENS || '4000'),

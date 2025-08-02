@@ -12,7 +12,7 @@ interface BlogPostWithDesignProps {
 export default function BlogPostWithDesign({ blogId }: BlogPostWithDesignProps) {
   const [loading, setLoading] = useState(true);
   const [currentBlogPost, setCurrentBlogPost] = useState<BlogPost | null>(null);
-  const [authorData, setAuthorData] = useState<any>(null);
+  const [authorData, setAuthorData] = useState<{ username?: string; first_name?: string; profile_image_url?: string } | null>(null);
   const [aiDesignerOpen, setAiDesignerOpen] = useState(false);
   const [customComponent, setCustomComponent] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);

@@ -52,7 +52,7 @@ export default function AITextEnhancer() {
       } else {
         setError(result.error || 'Failed to enhance content');
       }
-    } catch (err) {
+    } catch (err: unknown) {
       setError('Failed to connect to AI service');
     } finally {
       setIsLoading(false);

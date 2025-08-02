@@ -10,13 +10,12 @@ interface ReadingProgressBarProps {
 
 export default function ReadingProgressBar({ blogId, showStats = false }: ReadingProgressBarProps) {
   const [progress, setProgress] = useState(0);
-  const [storedProgress, setStoredProgress] = useState<ReadingProgress | null>(null);
+
 
   useEffect(() => {
     // Load stored progress if blogId is provided
     if (blogId) {
       const stored = readingProgressManager.getProgress(blogId);
-      setStoredProgress(stored);
       if (stored) {
         setProgress(stored.progress);
       }
