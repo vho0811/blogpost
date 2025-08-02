@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
@@ -8,7 +8,7 @@ import Link from 'next/link';
 import BlockNoteEditor from '@/components/BlockNoteEditor';
 import { showNotification } from '@/components/BeautifulNotification';
 
-export default function WritePage() {
+function WritePageContent() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -555,5 +555,13 @@ export default function WritePage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function WritePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center"><div className="text-white">Loading...</div></div>}>
+      <WritePageContent />
+    </Suspense>
   );
 }
