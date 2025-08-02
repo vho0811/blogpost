@@ -67,14 +67,14 @@ export class AIDesignService {
         designPrompt: request.designPrompt,
         error: undefined
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error applying design to blog post:', error);
       return {
         success: false,
         reactComponentCode: '',
         designTheme: '',
         designPrompt: request.designPrompt,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
       };
     }
   }
@@ -229,7 +229,7 @@ export default function BlogPostWithDesign({ blogId }: BlogPostWithDesignProps) 
     designRequest
   }: {
     blogPost: BlogPost;
-    authorData: any;
+    authorData: { username?: string; first_name?: string; profile_image_url?: string } | null;
     currentComponentCode: string;
     designRequest: string;
   }): string {
@@ -371,7 +371,7 @@ Return the complete React component code with your revolutionary design applied.
       }, 'current-user-id'); // This should be passed as parameter
 
       return !!updated;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving designed blog post:', error);
       return false;
     }

@@ -86,7 +86,7 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
           temperature: this.config.temperature,
           messages: [{ role: 'user', content: prompt }],
         });
-        response = (anthropicResponse.content[0] as any)?.text || '';
+        response = (anthropicResponse.content[0] as { text?: string })?.text || '';
       } else if (this.openai) {
         const openaiResponse = await this.openai.chat.completions.create({
           model: this.config.model,
@@ -128,7 +128,7 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
           temperature: this.config.temperature,
           messages: [{ role: 'user', content: customPrompt }],
         });
-        response = (anthropicResponse.content[0] as any)?.text || '';
+        response = (anthropicResponse.content[0] as { text?: string })?.text || '';
       } else if (this.openai) {
     
         const openaiResponse = await this.openai.chat.completions.create({

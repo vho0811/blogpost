@@ -39,9 +39,10 @@ export async function generateAIDesign(docId: string) {
     }
     
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error generating AI design:', error);
-    return { success: false, error: error.message };
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      return { success: false, error: errorMessage };
   }
 }
 

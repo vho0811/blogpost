@@ -266,7 +266,7 @@ export default function BlogAIDesigner({
       };
       
       // Set up global function as fallback (for external isOpen prop)
-      (window as any).openAIDesignerModal = () => {
+      (window as Window & { openAIDesignerModal?: () => void }).openAIDesignerModal = () => {
     
         setIsOpen(true);
       };

@@ -14,7 +14,7 @@ export default function Home() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPosts, setTotalPosts] = useState(0);
+
 
   // Debug Clerk state
 
@@ -26,7 +26,7 @@ export default function Home() {
         setIsLoading(true);
         const posts = await blogDatabase.getPublishedBlogPosts(12); // Show 12 posts initially
         setBlogPosts(posts || []);
-        setTotalPosts(posts?.length || 0);
+
         
         // Set the first post as featured, or use a default
         if (posts && posts.length > 0) {
@@ -218,27 +218,27 @@ export default function Home() {
                 {/* Interactive Stats Bar */}
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-6">
-                                      <div className="flex items-center space-x-4">
-                    {(featuredPost as any)?.users?.profile_image_url ? (
-                      <img 
-                        src={(featuredPost as any)?.users?.profile_image_url} 
-                        alt={(featuredPost as any)?.users?.username || 'Author'}
-                        className="w-16 h-16 rounded-full object-cover shadow-lg"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-400 to-purple-600 flex items-center justify-center shadow-lg">
-                        <span className="text-white font-bold text-xl">
-                          {(featuredPost as any)?.users?.username?.[0]?.toUpperCase() || 'A'}
-                        </span>
+                    <div className="flex items-center space-x-4">
+                      {featuredPost?.users?.profile_image_url ? (
+                        <img 
+                          src={featuredPost.users.profile_image_url} 
+                          alt={featuredPost.users.username || 'Author'}
+                          className="w-16 h-16 rounded-full object-cover shadow-lg"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-400 to-purple-600 flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-xl">
+                            {featuredPost?.users?.username?.[0]?.toUpperCase() || 'A'}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-white font-bold text-lg">
+                          {featuredPost?.users?.username || 'Author'}
+                        </p>
+                        <p className="text-gray-400">Blog Creator</p>
                       </div>
-                    )}
-                    <div>
-                      <p className="text-white font-bold text-lg">
-                        {(featuredPost as any)?.users?.username || 'Author'}
-                      </p>
-                      <p className="text-gray-400">Blog Creator</p>
                     </div>
-                  </div>
                     <div className="text-right">
                       <p className="text-gray-400 text-sm">
                         {featuredPost.published_at ? new Date(featuredPost.published_at).toLocaleDateString() : 'Recently'}
@@ -334,24 +334,24 @@ export default function Home() {
 
 
                       {/* Author, Date, and Stats */}
-                      <div className="flex items-center justify-between pt-2">
+                                              <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center space-x-3">
-                          {(post as any)?.users?.profile_image_url ? (
+                          {post?.users?.profile_image_url ? (
                             <img 
-                              src={(post as any)?.users?.profile_image_url} 
-                              alt={(post as any)?.users?.username || 'Author'}
+                              src={post.users.profile_image_url} 
+                              alt={post.users.username || 'Author'}
                               className="w-8 h-8 rounded-full object-cover"
                             />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-400 to-blue-600 flex items-center justify-center">
                               <span className="text-white font-bold text-sm">
-                                {(post as any)?.users?.username?.[0]?.toUpperCase() || 'A'}
+                                {post?.users?.username?.[0]?.toUpperCase() || 'A'}
                               </span>
                             </div>
                           )}
                           <div>
                             <p className="text-white font-medium text-sm">
-                              {(post as any)?.users?.username || 'Author'}
+                              {post?.users?.username || 'Author'}
                             </p>
                             <p className="text-gray-400 text-xs">Blog Creator</p>
                           </div>
@@ -421,8 +421,8 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">You've Seen All Stories!</h3>
-                <p className="text-gray-400 mb-6">You've reached the end of our current collection. Check back soon for more amazing stories!</p>
+                <h3 className="text-xl font-semibold text-white mb-2">You&apos;ve Seen All Stories!</h3>
+                <p className="text-gray-400 mb-6">You&apos;ve reached the end of our current collection. Check back soon for more amazing stories!</p>
                 {isSignedIn && (
                   <Link 
                     href="/write" 

@@ -57,6 +57,14 @@ export interface BlogPost {
   ai_website_settings?: AIWebsiteSettings; // Store AI design settings
   is_ai_designed?: boolean; // Flag to indicate if AI design is applied
   ai_designed_at?: string; // Timestamp when AI design was applied
+  
+  // Joined user data
+  users?: {
+    username?: string;
+    first_name?: string;
+    last_name?: string;
+    profile_image_url?: string;
+  };
 }
 
 export interface AIWebsiteSettings {

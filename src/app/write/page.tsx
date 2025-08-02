@@ -23,7 +23,7 @@ export default function WritePage() {
   });
   
   const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
   const [savedMessage, setSavedMessage] = useState('');
 
   const handleSave = useCallback(async (status: 'draft' | 'published') => {
@@ -100,7 +100,7 @@ export default function WritePage() {
       } else {
         showNotification('Failed to save blog post - there might be a duplicate title or slug. Please try a different title.', 'error');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       showNotification('Failed to save blog post. Please try again.', 'error');
     } finally {
       setIsSaving(false);
@@ -108,7 +108,7 @@ export default function WritePage() {
   }, [blogPost, user, router]);
 
   // Generate initial HTML for the blog post
-  const generateInitialHTML = (post: Partial<BlogPost>): string => {
+  const generateInitialHTML = useCallback((post: Partial<BlogPost>): string => {
     // Get user data for the author info
     const authorName = user?.firstName || user?.username || 'User';
     const authorInitial = authorName.charAt(0).toUpperCase();
@@ -352,7 +352,7 @@ export default function WritePage() {
 </body>
 </html>
     `;
-  };
+  }, [user]);
 
   const generateSlug = (title: string): string => {
     const baseSlug = title
