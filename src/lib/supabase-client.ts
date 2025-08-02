@@ -140,10 +140,11 @@ export class DesignDatabase {
     }
   }
 
-  private async applyRevertedDesign(): Promise<boolean> {
+  private async applyRevertedDesign(design: DesignHistory): Promise<boolean> {
     try {
       // This would apply the reverted design to the file
       // Implementation depends on your file system access
+      console.log('Applying reverted design:', design);
     
       return true;
     } catch (error) {
