@@ -304,6 +304,13 @@ export class BlogDatabase {
         .single();
 
       if (error) {
+        console.error('❌ UPDATE ERROR:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          updates: updates
+        });
         return null;
       }
 

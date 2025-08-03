@@ -33,7 +33,11 @@ function WritePageContent() {
     }
     setIsSaving(true);
     try {
-      const slug = blogPost.slug || generateSlug(blogPost.title);
+      // For existing posts, keep the original slug (never change it)
+      // For new posts, let the database generate a unique slug
+      const slug = blogPost.id && blogPost.slug ? blogPost.slug : undefined;
+      
+
       
       // Extract featured image from content or use default
       const extractedImage = extractFeaturedImage(blogPost.content || '');
@@ -66,26 +70,71 @@ function WritePageContent() {
         </svg>
       `);
       
-      // Generate initial HTML for the blog post
-      const initialHTML = generateInitialHTML(blogPost);
+      // Calculate read time for the blog post
+      const calculateReadTime = (content: string): number => {
+        if (!content) return 1;
+        const text = content
+          .replace(/<[^>]*>/g, '')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .trim();
+        const words = text.split(/\s+/).filter(word => word.length > 0);
+        return Math.max(Math.ceil(words.length / 200), 1);
+      };
+
+      const readTime = calculateReadTime(blogPost.content || '');
       
-      const blogData = {
-        ...blogPost,
-        slug,
-        status,
-        featured_image_url: featuredImageUrl,
-        published_at: status === 'published' ? new Date().toISOString() : undefined,
-        // Store the initial HTML in the database
-        ai_generated_html: initialHTML,
-        ai_website_settings: undefined,
-        is_ai_designed: false
-      } as BlogPost;
+      // Create blog data differently for new vs existing posts
+      let blogData: Partial<BlogPost>;
+      
+      if (blogPost.id) {
+        // For UPDATES: Never include slug to avoid unique constraint conflicts
+        blogData = {
+          title: blogPost.title,
+          subtitle: blogPost.subtitle,
+          content: blogPost.content,
+          category: blogPost.category,
+          status,
+          read_time: readTime,
+          featured_image_url: featuredImageUrl,
+          published_at: status === 'published' ? new Date().toISOString() : undefined,
+          // PRESERVE existing AI-designed HTML, only regenerate if none exists
+          ai_generated_html: blogPost.ai_generated_html || generateInitialHTML(blogPost)
+        };
+      } else {
+        // For NEW POSTS: Let database generate slug
+        blogData = {
+          ...blogPost,
+          status,
+          read_time: readTime,
+          featured_image_url: featuredImageUrl,
+          published_at: status === 'published' ? new Date().toISOString() : undefined,
+          ai_generated_html: generateInitialHTML(blogPost),
+          ai_website_settings: undefined,
+          is_ai_designed: false
+        };
+        // Remove any existing slug to let database generate it
+        delete (blogData as any).slug;
+      }
+
+      console.log('🔍 SAVE DEBUG:', {
+        isUpdate: !!blogPost.id,
+        blogData: {
+          id: blogData.id,
+          title: blogData.title,
+          slug: blogData.slug,
+          hasSlug: 'slug' in blogData
+        }
+      });
 
       let result;
       if (blogPost.id && user) {
         result = await blogDatabase.updateBlogPost(blogPost.id, blogData, user.id);
       } else if (user) {
-        result = await blogDatabase.createBlogPost(blogData, user.id);
+        result = await blogDatabase.createBlogPost(blogData as any, user.id);
       }
 
       if (result) {
@@ -109,28 +158,8 @@ function WritePageContent() {
 
   // Generate initial HTML for the blog post
   const generateInitialHTML = useCallback((post: Partial<BlogPost>): string => {
-    // Get user data for the author info
-    const authorName = user?.firstName || user?.username || 'User';
-    const authorInitial = authorName.charAt(0).toUpperCase();
-    const authorImage = user?.imageUrl || '';
-    
-    // Calculate read time if not already set
-    const calculateReadTime = (content: string): number => {
-      if (!content) return 1;
-      const text = content
-        .replace(/<[^>]*>/g, '')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .trim();
-      const words = text.split(/\s+/).filter(word => word.length > 0);
-      return Math.max(Math.ceil(words.length / 200), 1);
-    };
-    
-    // Use actual read time or calculate it
-    const readTime = (post.read_time && post.read_time > 0) ? post.read_time : calculateReadTime(post.content || '');
+    // This function now generates a dynamic template with placeholders
+    // instead of hardcoded values, so the HTML can adapt to content changes
     
     return `
 <!DOCTYPE html>
@@ -138,7 +167,7 @@ function WritePageContent() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${post.title}</title>
+    <title>{TITLE}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -306,15 +335,15 @@ function WritePageContent() {
             <main>
                 <section class="hero">
                     <div class="container">
-                        <h1 class="title">${post.title}</h1>
-                        ${post.subtitle ? `<p class="subtitle">${post.subtitle}</p>` : ''}
+                        <h1 class="title">{TITLE}</h1>
+                        {SUBTITLE}
                         
                         <div class="author-info">
                             <div class="author-avatar">
-                                ${authorImage ? `<img src="${authorImage}" alt="${authorName}" />` : authorInitial}
+                                {AUTHOR_AVATAR}
                             </div>
                             <div class="author-details">
-                                <div class="author-name">${authorName}</div>
+                                <div class="author-name">{AUTHOR_NAME}</div>
                                 <div class="author-role">Blog Creator</div>
                             </div>
                         </div>
@@ -324,27 +353,26 @@ function WritePageContent() {
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
-                                ${new Date().toLocaleDateString()}
+                                {PUBLISH_DATE}
                             </span>
                             <span>
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                ${readTime} min read
+                                {READ_TIME} min read
                             </span>
                             <span>
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                                 </svg>
-                                ${post.category || 'General'}
+                                {CATEGORY}
                             </span>
                         </div>
                     </div>
                 </section>
                 
                 <section class="content">
-                    ${post.featured_image_url ? `<img src="${post.featured_image_url}" alt="${post.title}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 10px; margin-bottom: 2rem; box-shadow: 0 8px 25px rgba(0,0,0,0.4);" />` : ''}
-                    ${post.content}
+                    {CONTENT}
                 </section>
             </main>
         </div>
@@ -354,17 +382,7 @@ function WritePageContent() {
     `;
   }, [user]);
 
-  const generateSlug = (title: string): string => {
-    const baseSlug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/^-+|-+$/g, '');
-    
-    // Add timestamp to make it unique
-    const timestamp = Date.now().toString().slice(-6);
-    return `${baseSlug}-${timestamp}`;
-  };
+  // Slug generation is now handled by the database to ensure uniqueness
 
   // Extract the FIRST image from content for featured image
   const extractFeaturedImage = (content: string): string | undefined => {
@@ -435,13 +453,13 @@ function WritePageContent() {
     loadBlogPost();
   }, [editId, user]);
 
-  // Auto-save functionality
+  // Auto-save functionality (reduced frequency to avoid interference)
   useEffect(() => {
     const autoSave = setTimeout(() => {
-             if (blogPost.title && blogPost.content) {
+      if (blogPost.title && blogPost.content) {
         handleSave('draft');
       }
-    }, 10000); // Auto-save every 10 seconds
+    }, 30000); // Auto-save every 30 seconds (reduced from 10)
 
     return () => clearTimeout(autoSave);
   }, [blogPost, handleSave]);

@@ -48,19 +48,22 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Get the existing HTML from the database
+    // Get the existing HTML template from the database
     const existingHTML = blogPost.ai_generated_html;
     if (!existingHTML) {
       return NextResponse.json({
         success: false,
-        error: 'No HTML found to modify'
+        error: 'No HTML template found to modify'
       }, { status: 400 });
     }
 
-    // Modify the existing HTML with AI using the theme prompt
+    // Send the existing template directly to AI (without injecting content)
+    console.log('🔍 Sending template to AI for styling...');
     const modifiedHTML = await modifyHTMLWithAI(existingHTML, blogPost, themePrompt);
+    console.log('🔍 AI returned HTML, length:', modifiedHTML.length);
+    console.log('🔍 Same as original?', modifiedHTML === existingHTML);
 
-    // Save the modified HTML back to the database
+    // Save the modified HTML template back to the database
     if (!blogPost.id) {
       return NextResponse.json({
         success: false,
@@ -96,94 +99,82 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Function to modify HTML with AI
+// Function to modify HTML template with AI
+// AI will use {CONTENT} placeholder, no need for content injection
+
 const modifyHTMLWithAI = async (existingHTML: string, blogPost: BlogPost, themePrompt: string): Promise<string> => {
+  console.log('🔍 modifyHTMLWithAI called with theme:', themePrompt);
+  
   // Analyze the user prompt to determine if it's valid
   const promptAnalysis = analyzeUserPrompt(themePrompt);
+  console.log('🔍 Prompt analysis:', promptAnalysis);
   
   if (!promptAnalysis.isValid) {
+    console.log('🔍 Prompt invalid, returning original HTML');
     // Return original HTML if prompt is not valid
     return existingHTML;
   }
 
-  const systemPrompt = `You are a professional web designer and developer. Your task is to redesign an HTML page structure and styling based on user requirements.
+  const systemPrompt = `You are a professional web designer. Your task is to modify ONLY the CSS styling in an HTML template while keeping everything else exactly the same.
 
-CRITICAL INSTRUCTIONS - READ CAREFULLY:
-- You are ONLY allowed to generate HTML and CSS code
-- DO NOT include any explanatory text, comments about the design, or descriptions
-- DO NOT include any text that describes what you're doing
-- DO NOT include any "This redesign features:" or similar descriptions
-- DO NOT include any meta descriptions or design explanations
-- ONLY return pure HTML and CSS code
-- If you include any text that's not HTML/CSS, you will be penalized
+CRITICAL RULES:
+1. You will receive a complete HTML template
+2. Keep ALL text, content, and constants EXACTLY as they are
+3. Keep ALL HTML structure EXACTLY as it is
+4. ONLY modify the CSS styling in the <style> section
+5. DO NOT add comments like "Rest of HTML remains unchanged"
+6. Return the COMPLETE HTML file with only the CSS modified
 
-IMPORTANT CONTEXT:
-- This is a blog post page with fixed navigation buttons that MUST remain visible and accessible
-- There are TWO fixed buttons positioned outside the main content area:
-  1. "Back to Stories" button (top-left, fixed position) - should always be visible
-  2. "AI Design" button (top-right, fixed position) - has dark gray background (bg-gray-800) with white text
-- These buttons are handled by React components and should NOT be included in your HTML
-- Your design should work well with these fixed buttons remaining visible
-- CRITICAL: Do NOT include any navigation, header, or button elements in your HTML output
-- CRITICAL: Do NOT include any "Back to Stories" links or "AI Design" buttons in your HTML
-- CRITICAL: Focus only on the content area, hero section, and styling - leave navigation to React
-- CRITICAL: The existing author metadata section (profile image, name, date, read time, category) will be preserved exactly as is
-- CRITICAL: DO NOT create or modify any author info sections - they are handled separately
+WHAT TO PRESERVE EXACTLY:
+- All dynamic content and template variables
+- All HTML elements and structure
+- All existing content and text
+- The complete HTML document structure
+- All author information and metadata
+- All images and media references
 
-CRITICAL REQUIREMENTS:
-1. Redesign the ENTIRE page structure - outer wrapper, background, header, hero section, content area, everything
-2. Include the title and subtitle in your design, but use a placeholder for the main content
-3. Apply the specific design theme to the WHOLE page including the outer wrapper and background
-4. Redesign the complete layout, colors, typography, animations for the entire page
-5. Make sure the entire page design matches their theme description
-6. Add appropriate animations and effects for the theme across the whole page
-7. Use colors and typography that match the theme throughout
-8. IMPORTANT: Include the title and subtitle in your design, but use <!-- CONTENT_PLACEHOLDER --> for the main content
-9. DO NOT use comments like "<!-- Rest of the HTML remains exactly the same -->"
-10. Redesign the complete HTML structure with enhanced CSS for the entire page
-11. Include the title and subtitle in your design, but use <!-- CONTENT_PLACEHOLDER --> for the main content
-12. Redesign outer-wrapper, header, navigation, hero section, content area - EVERYTHING
-13. The outer wrapper and background should match the theme
-14. DO NOT include any AI Design buttons in the HTML - they are handled separately
-15. The fixed buttons will remain visible on top of your design, so ensure your background/colors work well with them
-16. Use contrasting colors - if background is bright, use dark text; if background is dark, use light text
-17. CRITICAL: You MUST include all the metadata constants in your HTML design
-18. CRITICAL: Include {AUTHOR_NAME}, {AUTHOR_IMAGE}, {PUBLISHED_DATE}, {READ_TIME}, {CATEGORY} in your design
-19. CRITICAL: Create a styled author section with profile image, name, date, read time, and category
-20. CRITICAL: Only redesign the visual styling - keep all the metadata constants intact
-21. CRITICAL: Use {TITLE}, {SUBTITLE} for the title and subtitle in your design
-22. CRITICAL: The constants will be replaced with actual values - just include them in your HTML
+WHAT YOU CAN MODIFY:
+- Colors, fonts, backgrounds in the CSS
+- Layout and spacing in the CSS
+- Animations and effects in the CSS
+- Add new CSS classes if needed
 
-BLOG INFO:
-Title: {TITLE}
-Subtitle: {SUBTITLE}
-Category: {CATEGORY}
-Read Time: {READ_TIME}
-Author Name: {AUTHOR_NAME}
-Author Image: {AUTHOR_IMAGE}
-Published Date: {PUBLISHED_DATE}
+DESIGN THEME: ${promptAnalysis.enhancedPrompt}
 
-DESIGN REQUIREMENTS:
-${promptAnalysis.enhancedPrompt}
-
-FINAL INSTRUCTION: Return ONLY pure HTML and CSS code. NO explanations, NO descriptions, NO meta text. ONLY the HTML structure with embedded CSS. Include <!-- CONTENT_PLACEHOLDER --> where the content should go. 
-
-EXAMPLE AUTHOR SECTION STRUCTURE:
-<div class="author-section">
-  <img src="{AUTHOR_IMAGE}" alt="Author" class="author-avatar" />
-  <div class="author-info">
-    <span class="author-name">{AUTHOR_NAME}</span>
-    <span class="publish-date">{PUBLISHED_DATE}</span>
-    <span class="read-time">{READ_TIME}</span>
-    <span class="category">{CATEGORY}</span>
-  </div>
-</div>
-
-Include this author section in your design with the constants intact.`;
+IMPORTANT: Return the COMPLETE HTML document with only the CSS styling modified. Do not use placeholder comments or truncate the HTML.`;
 
     try {
-    // DO NOT pass existing HTML to AI - it contains content
-    const response = await aiService.enhanceBlogPostWithCustomPrompt(systemPrompt);
+    // Pass the existing HTML template to AI for styling modification
+    const userPrompt = `Here is the existing HTML template that you need to restyle:
+
+${existingHTML}
+
+CRITICAL INSTRUCTION: You must use placeholders for ALL dynamic content. This is MANDATORY:
+- Keep ALL HTML structure EXACTLY the same
+- Use these EXACT placeholders (do not change them):
+  * {TITLE} - for blog title
+  * {SUBTITLE} - for blog subtitle  
+  * {CONTENT} - for blog content
+  * {AUTHOR_NAME} - for author name
+  * {AUTHOR_AVATAR} - for author avatar/image
+  * {PUBLISH_DATE} - for publish date
+  * {READ_TIME} - for read time
+  * {CATEGORY} - for blog category
+- Do NOT put any actual text content - only use these placeholders
+- ONLY modify CSS styling
+
+Examples of what sections should look like:
+<h1 class="title">{TITLE}</h1>
+<div class="author-name">{AUTHOR_NAME}</div>
+<section class="content">{CONTENT}</section>
+
+DO NOT put actual text content anywhere - use only the placeholders listed above.
+
+`;
+    
+    console.log('🔍 Calling AI service...');
+    const response = await aiService.enhanceBlogPostWithCustomPrompt(systemPrompt + '\n\nUSER REQUEST:\n' + userPrompt);
+    console.log('🔍 AI response received, content length:', response.content?.length);
     
     if (response.content) {
       // Clean the AI response to remove any unwanted text
@@ -198,33 +189,10 @@ Include this author section in your design with the constants intact.`;
       // Remove any explanatory text before or after HTML
       cleanedContent = cleanedContent.replace(/^[^<]*/, '').replace(/[^>]*$/, '');
       
-      // Prepare all the metadata values
-      const authorName = blogPost.users?.first_name 
-        ? `${blogPost.users.first_name}${blogPost.users.last_name ? ` ${blogPost.users.last_name}` : ''}`
-        : 'Anonymous';
-      const authorImage = blogPost.users?.profile_image_url || '/default-avatar.png';
-      const publishedDate = new Date(blogPost.published_at || blogPost.created_at || '').toLocaleDateString();
-      const readTime = `${blogPost.read_time || 5} min read`;
-      const category = blogPost.category || 'General';
+      // Return the AI generated content directly
       
-      // Replace all constants with actual values
-      let finalHTML = cleanedContent
-        .replace(/{TITLE}/g, blogPost.title)
-        .replace(/{SUBTITLE}/g, blogPost.subtitle || '')
-        .replace(/{CATEGORY}/g, category)
-        .replace(/{READ_TIME}/g, readTime)
-        .replace(/{AUTHOR_NAME}/g, authorName)
-        .replace(/{AUTHOR_IMAGE}/g, authorImage)
-        .replace(/{PUBLISHED_DATE}/g, publishedDate);
-      
-      // Inject the blog content
-      const contentWithHTML = blogPost.content.replace(/\n/g, '<br>').replace(/\s{2,}/g, '&nbsp;&nbsp;');
-      finalHTML = finalHTML.replace(
-        '<!-- CONTENT_PLACEHOLDER -->',
-        `<div class="blog-body">${contentWithHTML}</div>`
-      );
-      
-      return finalHTML;
+      // The AI should have preserved all constants - return the styled template as-is
+      return cleanedContent;
     } else {
       // Fallback: return the original HTML
       return existingHTML;

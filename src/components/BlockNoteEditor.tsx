@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useCallback } from 'react';
 import { PartialBlock } from '@blocknote/core';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
@@ -32,12 +32,18 @@ export default function BlockNoteEditor({
             if (Array.isArray(parsed)) {
               return parsed;
             }
-          } catch {
-            // Fall through to HTML processing
+          } catch (jsonError) {
+            // Fall through to other parsing methods
           }
         }
 
-        // Process as HTML content
+        // For HTML content, we'll handle it after the editor is created
+        if (initialContent.includes('<') && initialContent.includes('>')) {
+          // Return empty blocks for now, we'll load HTML content after editor creation
+          return [{ type: 'paragraph' as const, content: '' }];
+        }
+
+        // Fallback: Process as plain text
         const cleanText = initialContent
           .replace(/<br\s*\/?>/gi, '\n')
           .replace(/<\/p>/gi, '\n')
@@ -60,7 +66,6 @@ export default function BlockNoteEditor({
         
         return blocks.length > 0 ? blocks : [{ type: 'paragraph' as const, content: '' }];
       } catch (error) {
-        console.error('Error parsing initial content:', error);
         return [{ type: 'paragraph' as const, content: '' }];
       }
     }
@@ -87,20 +92,52 @@ export default function BlockNoteEditor({
   const editor = useCreateBlockNote({
     initialContent: initialBlocks,
     uploadFile,
-    // Explicitly enable all default features
+    // Enable all default features for proper functionality
     trailingBlock: true,
     animations: true,
   });
 
-  // Handle content changes
-  const handleChange = async () => {
-    try {
-      const htmlContent = await editor.blocksToHTMLLossy(editor.document);
-      onChange?.(htmlContent);
-    } catch (error) {
-      console.error('Error converting blocks to HTML:', error);
+  // Handle HTML content loading after editor creation
+  useEffect(() => {
+    if (initialContent && initialContent.includes('<') && initialContent.includes('>')) {
+      const loadHTMLContent = async () => {
+        try {
+          const blocks = await editor.tryParseHTMLToBlocks(initialContent);
+          editor.replaceBlocks(editor.document, blocks);
+        } catch (error) {
+          // Silently handle parsing errors
+        }
+      };
+      loadHTMLContent();
     }
-  };
+  }, [editor, initialContent]);
+
+  // Debounced content change handler to avoid excessive calls
+  const debouncedOnChange = useCallback(
+    async () => {
+      try {
+        // Convert blocks to HTML using BlockNote's official method
+        const htmlContent = await editor.blocksToHTMLLossy(editor.document);
+        onChange?.(htmlContent);
+      } catch (error) {
+        // Silently handle conversion errors
+      }
+    },
+    [editor, onChange]
+  );
+
+  // Handle content changes with debouncing
+  const handleChange = useCallback(() => {
+    // Clear any existing timeout
+    if ((window as any).blockNoteChangeTimeout) {
+      clearTimeout((window as any).blockNoteChangeTimeout);
+    }
+    
+    // Set a new timeout to debounce the change - INCREASED to prevent scroll jumping
+    (window as any).blockNoteChangeTimeout = setTimeout(() => {
+      debouncedOnChange();
+    }, 1000); // Increased from 500ms to 1000ms to prevent frequent re-renders
+  }, [debouncedOnChange]);
 
   return (
     <div className="min-h-[400px] bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">

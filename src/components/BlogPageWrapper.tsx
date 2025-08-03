@@ -5,8 +5,46 @@ import { useUser } from '@clerk/nextjs';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
 import SimpleAIDesignButton from '@/components/SimpleAIDesignButton';
 import ReadingProgressBar from '@/components/ReadingProgressBar';
-import InteractionSection from '@/components/InteractionSection';
 import Link from 'next/link';
+
+// Function to replace all dynamic placeholders in HTML template
+function replaceAllPlaceholders(htmlTemplate: string, blogPost: BlogPost): string {
+  if (!htmlTemplate || !blogPost) return htmlTemplate || '';
+  
+  // Get user data for author info
+  const authorData = blogPost.users;
+  const authorName = authorData?.first_name || authorData?.username || 'Unknown Author';
+  const authorImage = authorData?.profile_image_url || '';
+  const authorInitial = authorName.charAt(0).toUpperCase();
+  
+  // Calculate read time if needed
+  const calculateReadTime = (content: string): number => {
+    if (!content) return 1;
+    const text = content
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .trim();
+    const words = text.split(/\s+/).filter(word => word.length > 0);
+    return Math.max(Math.ceil(words.length / 200), 1);
+  };
+  
+  const readTime = (blogPost.read_time && blogPost.read_time > 0) ? blogPost.read_time : calculateReadTime(blogPost.content || '');
+  
+  // Replace all placeholders with actual values
+  return htmlTemplate
+    .replace(/{TITLE}/g, blogPost.title || 'Untitled')
+    .replace(/{SUBTITLE}/g, blogPost.subtitle ? `<p class="subtitle">${blogPost.subtitle}</p>` : '')
+    .replace(/{CONTENT}/g, blogPost.content || '')
+    .replace(/{AUTHOR_NAME}/g, authorName)
+    .replace(/{AUTHOR_AVATAR}/g, authorImage ? `<img src="${authorImage}" alt="${authorName}" />` : authorInitial)
+    .replace(/{PUBLISH_DATE}/g, new Date(blogPost.published_at || blogPost.created_at || '').toLocaleDateString())
+    .replace(/{READ_TIME}/g, readTime.toString())
+    .replace(/{CATEGORY}/g, blogPost.category || 'General');
+}
 
 interface BlogPageWrapperProps {
   blogId: string;
@@ -32,6 +70,14 @@ export default function BlogPageWrapper({ blogId }: BlogPageWrapperProps) {
         }
         
         if (post) {
+          console.log('🔍 BlogPageWrapper loaded post:', {
+            id: post.id,
+            title: post.title,
+            hasAiHtml: !!post.ai_generated_html,
+            aiHtmlLength: post.ai_generated_html?.length,
+            contentLength: post.content?.length,
+            contentPreview: post.content?.slice(0, 100)
+          });
           setBlogPost(post);
         }
       } catch (error) {
@@ -85,7 +131,9 @@ export default function BlogPageWrapper({ blogId }: BlogPageWrapperProps) {
               }}
             >
               <div 
-                dangerouslySetInnerHTML={{ __html: blogPost.ai_generated_html }}
+                dangerouslySetInnerHTML={{ 
+                  __html: replaceAllPlaceholders(blogPost.ai_generated_html, blogPost)
+                }}
                 className="w-full min-h-screen"
                 style={{ 
                   display: 'block',
@@ -100,7 +148,6 @@ export default function BlogPageWrapper({ blogId }: BlogPageWrapperProps) {
                 {blogPost?.subtitle && (
                   <p className="text-xl text-gray-600 mb-8">{blogPost.subtitle}</p>
                 )}
-                
                 <div className="prose prose-lg max-w-none">
                   <div dangerouslySetInnerHTML={{ __html: blogPost?.content || '' }} />
                 </div>
@@ -109,11 +156,6 @@ export default function BlogPageWrapper({ blogId }: BlogPageWrapperProps) {
           )}
         </div>
       </div>
-      
-      {/* Interaction Section */}
-      {blogPost && blogPost.id && (
-        <InteractionSection blogPostId={blogPost.id} initialLikesCount={blogPost.likes || 0} />
-      )}
     </>
   );
 } 

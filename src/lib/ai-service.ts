@@ -122,21 +122,28 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
       // Try Claude first, then fallback to other providers
       if (this.anthropic) {
     
+        // Use higher token limit for HTML generation (Claude max is 8192)
+        const isHTMLGeneration = customPrompt.includes('<!DOCTYPE html>') || customPrompt.includes('<html') || customPrompt.includes('HTML template');
+        const maxTokensForRequest = isHTMLGeneration ? 8192 : Math.min(this.config.maxTokens, 8192);
+        
         const anthropicResponse = await this.anthropic.messages.create({
           model: this.config.model,
-          max_tokens: Math.min(this.config.maxTokens, 32000), // Higher cap for long content
+          max_tokens: maxTokensForRequest,
           temperature: this.config.temperature,
           messages: [{ role: 'user', content: customPrompt }],
           stream: false, // Disable streaming to avoid the warning
         });
         response = (anthropicResponse.content[0] as { text?: string })?.text || '';
       } else if (this.openai) {
-    
+        // Use higher token limit for HTML generation
+        const isHTMLGeneration = customPrompt.includes('<!DOCTYPE html>') || customPrompt.includes('<html') || customPrompt.includes('HTML template');
+        const maxTokensForRequest = isHTMLGeneration ? 8192 : this.config.maxTokens;
+        
         const openaiResponse = await this.openai.chat.completions.create({
           model: this.config.model,
           messages: [{ role: 'user', content: customPrompt }],
           temperature: this.config.temperature,
-          max_tokens: this.config.maxTokens,
+          max_tokens: maxTokensForRequest,
         });
         response = openaiResponse.choices[0]?.message?.content || '';
       } else if (this.googleAI) {
