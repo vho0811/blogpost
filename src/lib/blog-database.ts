@@ -586,7 +586,20 @@ export class BlogDatabase {
   }
 
   // Comments functionality
-  async addComment(blogPostId: string, content: string, clerkUserId: string): Promise<any> {
+  async addComment(blogPostId: string, content: string, clerkUserId: string): Promise<{
+    id: string;
+    blog_post_id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    users: {
+      username?: string;
+      first_name?: string;
+      last_name?: string;
+      profile_image_url?: string;
+    };
+  } | null> {
     try {
       // Get current user
       const user = await this.getCurrentUser(clerkUserId);
@@ -624,7 +637,20 @@ export class BlogDatabase {
     }
   }
 
-  async getComments(blogPostId: string): Promise<any[]> {
+  async getComments(blogPostId: string): Promise<{
+    id: string;
+    blog_post_id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    users: {
+      username?: string;
+      first_name?: string;
+      last_name?: string;
+      profile_image_url?: string;
+    };
+  }[]> {
     try {
       const { data, error } = await this.supabase
         .from('comments')
@@ -652,7 +678,20 @@ export class BlogDatabase {
     }
   }
 
-  async updateComment(commentId: string, content: string, clerkUserId: string): Promise<any> {
+  async updateComment(commentId: string, content: string, clerkUserId: string): Promise<{
+    id: string;
+    blog_post_id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    users: {
+      username?: string;
+      first_name?: string;
+      last_name?: string;
+      profile_image_url?: string;
+    };
+  } | null> {
     try {
       const currentUser = await this.getCurrentUser(clerkUserId);
       if (!currentUser) {

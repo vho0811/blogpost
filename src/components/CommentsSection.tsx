@@ -51,7 +51,9 @@ export default function CommentsSection({ blogPostId }: CommentsSectionProps) {
     try {
       setIsSubmitting(true);
       const newCommentData = await blogDatabase.addComment(blogPostId, newComment.trim(), user.id);
-      setComments(prev => [newCommentData, ...prev]);
+      if (newCommentData) {
+        setComments(prev => [newCommentData, ...prev]);
+      }
       setNewComment('');
     } catch (error) {
       console.error('Error adding comment:', error);
