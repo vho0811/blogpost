@@ -300,7 +300,7 @@ export default function Home() {
         {searchQuery && (
           <div className="mb-6 p-4 bg-white/5 rounded-lg border border-white/10">
             <p className="text-white/80 text-sm">
-              Search results for "{searchQuery}" • {filteredPosts.length} stories found
+              Search results for &quot;{searchQuery}&quot; • {filteredPosts.length} stories found
             </p>
             <button 
               onClick={() => setSearchQuery('')}

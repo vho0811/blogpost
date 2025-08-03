@@ -67,16 +67,16 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  // const [mounted, setMounted] = useState(false);
   
   const [settings, setSettings] = useState<AIDesignSettings>({
     style: 'modern',
     customPrompt: '', // Start with empty prompt - user must type or select
   });
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // useEffect(() => {
+  //   setMounted(true);
+  // }, []);
 
   const handleAIDesign = async (themePrompt: string) => {
     setIsGenerating(true);
@@ -160,7 +160,7 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
     getSupabaseUserId();
   }, [user]);
   
-  const isOwner = supabaseUserId && blogPost && blogPost.user_id && supabaseUserId === blogPost.user_id;
+  // const isOwner = supabaseUserId && blogPost && blogPost.user_id && supabaseUserId === blogPost.user_id;
   
   // FORCE SHOW BUTTON - FUCK THE MOUNTED CHECK
   // if (!mounted) return null;

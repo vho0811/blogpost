@@ -269,64 +269,6 @@ Focus on creating a design that matches the user's vision while maintaining prof
 
 // Function to enhance design prompts with intelligent analysis
 const enhanceDesignPrompt = (prompt: string): string => {
-  const lowerPrompt = prompt.toLowerCase();
-  let enhanced = prompt;
-  
-  // Add specific design instructions based on keywords
-  if (lowerPrompt.includes('dark') || lowerPrompt.includes('night') || lowerPrompt.includes('black')) {
-    enhanced += ' Use dark backgrounds with light text and subtle accents.';
-  }
-  
-  if (lowerPrompt.includes('light') || lowerPrompt.includes('bright') || lowerPrompt.includes('white')) {
-    enhanced += ' Use light backgrounds with dark text and clean typography.';
-  }
-  
-  if (lowerPrompt.includes('colorful') || lowerPrompt.includes('vibrant') || lowerPrompt.includes('bright') || lowerPrompt.includes('rainbow')) {
-    enhanced += ' Use a vibrant color palette with strong contrasts and energetic elements.';
-  }
-  
-  if (lowerPrompt.includes('minimal') || lowerPrompt.includes('simple') || lowerPrompt.includes('clean') || lowerPrompt.includes('minimalist')) {
-    enhanced += ' Use lots of white space, simple typography, and minimal decorative elements.';
-  }
-  
-  if (lowerPrompt.includes('professional') || lowerPrompt.includes('business') || lowerPrompt.includes('corporate')) {
-    enhanced += ' Use a conservative color palette, structured layout, and readable typography.';
-  }
-  
-  if (lowerPrompt.includes('modern') || lowerPrompt.includes('contemporary')) {
-    enhanced += ' Use modern typography, clean lines, and contemporary design principles.';
-  }
-  
-  if (lowerPrompt.includes('elegant') || lowerPrompt.includes('luxury') || lowerPrompt.includes('premium') || lowerPrompt.includes('sophisticated')) {
-    enhanced += ' Use sophisticated typography, refined spacing, and premium visual elements.';
-  }
-  
-  if (lowerPrompt.includes('tech') || lowerPrompt.includes('futuristic') || lowerPrompt.includes('cyber') || lowerPrompt.includes('neon')) {
-    enhanced += ' Use futuristic elements, neon accents, and high-tech visual styling.';
-  }
-  
-  if (lowerPrompt.includes('warm') || lowerPrompt.includes('cozy') || lowerPrompt.includes('comfortable') || lowerPrompt.includes('inviting')) {
-    enhanced += ' Use warm color tones, soft gradients, and inviting visual elements.';
-  }
-  
-  if (lowerPrompt.includes('creative') || lowerPrompt.includes('artistic') || lowerPrompt.includes('art') || lowerPrompt.includes('unique')) {
-    enhanced += ' Use creative typography, artistic elements, and unique visual styling.';
-  }
-  
-  if (lowerPrompt.includes('vintage') || lowerPrompt.includes('retro') || lowerPrompt.includes('old')) {
-    enhanced += ' Use vintage typography, retro color schemes, and classic design elements.';
-  }
-  
-  if (lowerPrompt.includes('playful') || lowerPrompt.includes('fun') || lowerPrompt.includes('cute')) {
-    enhanced += ' Use playful typography, fun colors, and whimsical design elements.';
-  }
-  
-  if (lowerPrompt.includes('serious') || lowerPrompt.includes('formal') || lowerPrompt.includes('strict')) {
-    enhanced += ' Use formal typography, structured layouts, and conservative design elements.';
-  }
-  
-  // Always add readability and contrast instructions
-  enhanced += ' Ensure excellent readability with strong contrast between text and background.';
-  
-  return enhanced;
+  // This function is no longer used but kept for potential future use
+  return prompt;
 }; 
