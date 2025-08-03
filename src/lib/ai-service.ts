@@ -194,7 +194,7 @@ Format the response as JSON with these keys: title, subtitle, content, designSug
     const prompt = `
 Generate 5 creative design suggestions for this blog content that would make it more visually appealing and engaging:
 
-Content: ${content.substring(0, 500)}...
+Content: ${content.substring(0, 2000)}...
 Theme: ${theme}
 
 Focus on:
@@ -256,7 +256,7 @@ Return as a JSON array of strings.
 Generate 5 SEO optimization suggestions for this blog post:
 
 Title: ${title}
-Content: ${content.substring(0, 300)}...
+Content: ${content.substring(0, 1500)}...
 
 Focus on:
 - Meta descriptions

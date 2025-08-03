@@ -520,24 +520,43 @@ function WritePageContent() {
             />
           </div>
 
-          {/* Category */}
+                    {/* Category */}
           <div className="space-y-4">
-            <label className="block text-white font-medium">Category</label>
-            <select
-                             value={blogPost.category}
-               onChange={(e) => setBlogPost({ ...blogPost, category: e.target.value })}
-              className="w-full p-3 bg-gray-800 text-white border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="General">General</option>
-              <option value="Technology">Technology</option>
-              <option value="Lifestyle">Lifestyle</option>
-              <option value="Business">Business</option>
-              <option value="Travel">Travel</option>
-              <option value="Food">Food</option>
-              <option value="Health">Health</option>
-              <option value="Sports">Sports</option>
-              <option value="Entertainment">Entertainment</option>
-            </select>
+            <label className="block text-white font-medium text-lg mb-3">Category</label>
+            <div className="relative">
+              <select
+                value={blogPost.category}
+                onChange={(e) => setBlogPost({ ...blogPost, category: e.target.value })}
+                className="w-full p-4 pr-12 bg-gradient-to-r from-gray-800 to-gray-700 text-white border-2 border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all duration-300 hover:border-gray-500 hover:from-gray-750 hover:to-gray-650 appearance-none cursor-pointer backdrop-blur-sm shadow-lg"
+                style={{
+                  backgroundImage: 'linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(55, 65, 81, 0.9) 100%)',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                <option value="General" className="bg-gray-800 text-white py-2">📝 General</option>
+                <option value="Technology" className="bg-gray-800 text-white py-2">💻 Technology</option>
+                <option value="Lifestyle" className="bg-gray-800 text-white py-2">🌟 Lifestyle</option>
+                <option value="Business" className="bg-gray-800 text-white py-2">💼 Business</option>
+                <option value="Travel" className="bg-gray-800 text-white py-2">✈️ Travel</option>
+                <option value="Food" className="bg-gray-800 text-white py-2">🍽️ Food</option>
+                <option value="Health" className="bg-gray-800 text-white py-2">🏥 Health</option>
+                <option value="Sports" className="bg-gray-800 text-white py-2">⚽ Sports</option>
+                <option value="Entertainment" className="bg-gray-800 text-white py-2">🎬 Entertainment</option>
+              </select>
+              
+              {/* Custom dropdown arrow */}
+              <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                <svg className="w-5 h-5 text-gray-400 transition-transform duration-200 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              
+              {/* Glow effect on focus */}
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 transition-all duration-300 pointer-events-none opacity-0 focus-within:opacity-100" style={{
+                backgroundImage: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%)'
+              }}></div>
+            </div>
           </div>
 
           {/* Content Editor */}

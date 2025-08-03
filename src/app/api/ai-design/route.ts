@@ -103,22 +103,19 @@ const modifyHTMLWithAI = async (existingHTML: string, blogPost: BlogPost, themeP
   
   if (!promptAnalysis.isValid) {
     // Return original HTML if prompt is not valid
-
     return existingHTML;
   }
 
-  // Truncate content if it's too long to avoid token limits
-  const maxContentLength = 15000; // Characters
-  const truncatedContent = blogPost.content.length > maxContentLength 
-    ? blogPost.content.substring(0, maxContentLength) + '... [Content truncated for AI processing]'
-    : blogPost.content;
-    
-  // Log warning if content was truncated
-  if (blogPost.content.length > maxContentLength) {
-    console.warn(`Blog post content truncated from ${blogPost.content.length} to ${maxContentLength} characters for AI processing`);
-  }
+  const systemPrompt = `You are a professional web designer and developer. Your task is to redesign an HTML page structure and styling based on user requirements.
 
-  const systemPrompt = `You are a professional web designer and developer. Your task is to redesign an entire HTML page based on user requirements.
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+- You are ONLY allowed to generate HTML and CSS code
+- DO NOT include any explanatory text, comments about the design, or descriptions
+- DO NOT include any text that describes what you're doing
+- DO NOT include any "This redesign features:" or similar descriptions
+- DO NOT include any meta descriptions or design explanations
+- ONLY return pure HTML and CSS code
+- If you include any text that's not HTML/CSS, you will be penalized
 
 IMPORTANT CONTEXT:
 - This is a blog post page with fixed navigation buttons that MUST remain visible and accessible
@@ -130,42 +127,104 @@ IMPORTANT CONTEXT:
 - CRITICAL: Do NOT include any navigation, header, or button elements in your HTML output
 - CRITICAL: Do NOT include any "Back to Stories" links or "AI Design" buttons in your HTML
 - CRITICAL: Focus only on the content area, hero section, and styling - leave navigation to React
+- CRITICAL: The existing author metadata section (profile image, name, date, read time, category) will be preserved exactly as is
+- CRITICAL: DO NOT create or modify any author info sections - they are handled separately
 
 CRITICAL REQUIREMENTS:
-1. Redesign the ENTIRE page - outer wrapper, background, header, navigation, hero section, content area, everything
-2. Keep all the content (title, subtitle, content) exactly the same
+1. Redesign the ENTIRE page structure - outer wrapper, background, header, hero section, content area, everything
+2. Include the title and subtitle in your design, but use a placeholder for the main content
 3. Apply the specific design theme to the WHOLE page including the outer wrapper and background
 4. Redesign the complete layout, colors, typography, animations for the entire page
 5. Make sure the entire page design matches their theme description
 6. Add appropriate animations and effects for the theme across the whole page
 7. Use colors and typography that match the theme throughout
-8. IMPORTANT: Include the actual blog content in the content area
+8. IMPORTANT: Include the title and subtitle in your design, but use <!-- CONTENT_PLACEHOLDER --> for the main content
 9. DO NOT use comments like "<!-- Rest of the HTML remains exactly the same -->"
 10. Redesign the complete HTML structure with enhanced CSS for the entire page
-11. The content section should contain: ${truncatedContent}
+11. Include the title and subtitle in your design, but use <!-- CONTENT_PLACEHOLDER --> for the main content
 12. Redesign outer-wrapper, header, navigation, hero section, content area - EVERYTHING
 13. The outer wrapper and background should match the theme
 14. DO NOT include any AI Design buttons in the HTML - they are handled separately
 15. The fixed buttons will remain visible on top of your design, so ensure your background/colors work well with them
 16. Use contrasting colors - if background is bright, use dark text; if background is dark, use light text
+17. CRITICAL: You MUST include all the metadata constants in your HTML design
+18. CRITICAL: Include {AUTHOR_NAME}, {AUTHOR_IMAGE}, {PUBLISHED_DATE}, {READ_TIME}, {CATEGORY} in your design
+19. CRITICAL: Create a styled author section with profile image, name, date, read time, and category
+20. CRITICAL: Only redesign the visual styling - keep all the metadata constants intact
+21. CRITICAL: Use {TITLE}, {SUBTITLE} for the title and subtitle in your design
+22. CRITICAL: The constants will be replaced with actual values - just include them in your HTML
 
 BLOG INFO:
-Title: ${blogPost.title}
-Subtitle: ${blogPost.subtitle || ''}
-Content: ${truncatedContent}
-Category: ${blogPost.category || 'General'}
-Read Time: ${blogPost.read_time && blogPost.read_time > 0 ? blogPost.read_time : 5} min read
+Title: {TITLE}
+Subtitle: {SUBTITLE}
+Category: {CATEGORY}
+Read Time: {READ_TIME}
+Author Name: {AUTHOR_NAME}
+Author Image: {AUTHOR_IMAGE}
+Published Date: {PUBLISHED_DATE}
 
 DESIGN REQUIREMENTS:
 ${promptAnalysis.enhancedPrompt}
 
-Return ONLY the complete redesigned HTML page with enhanced CSS for the entire page, no explanations.`;
+FINAL INSTRUCTION: Return ONLY pure HTML and CSS code. NO explanations, NO descriptions, NO meta text. ONLY the HTML structure with embedded CSS. Include <!-- CONTENT_PLACEHOLDER --> where the content should go. 
 
-  try {
-    const response = await aiService.enhanceBlogPostWithCustomPrompt(systemPrompt + '\n\n' + `Here is the current HTML page to redesign:\n\n${existingHTML}`);
+EXAMPLE AUTHOR SECTION STRUCTURE:
+<div class="author-section">
+  <img src="{AUTHOR_IMAGE}" alt="Author" class="author-avatar" />
+  <div class="author-info">
+    <span class="author-name">{AUTHOR_NAME}</span>
+    <span class="publish-date">{PUBLISHED_DATE}</span>
+    <span class="read-time">{READ_TIME}</span>
+    <span class="category">{CATEGORY}</span>
+  </div>
+</div>
+
+Include this author section in your design with the constants intact.`;
+
+    try {
+    // DO NOT pass existing HTML to AI - it contains content
+    const response = await aiService.enhanceBlogPostWithCustomPrompt(systemPrompt);
     
     if (response.content) {
-      return response.content;
+      // Clean the AI response to remove any unwanted text
+      let cleanedContent = response.content;
+      
+      // Remove any text that's not HTML (like "This redesign features:" descriptions)
+      const htmlMatch = cleanedContent.match(/<!DOCTYPE html>[\s\S]*<\/html>/i);
+      if (htmlMatch) {
+        cleanedContent = htmlMatch[0];
+      }
+      
+      // Remove any explanatory text before or after HTML
+      cleanedContent = cleanedContent.replace(/^[^<]*/, '').replace(/[^>]*$/, '');
+      
+      // Prepare all the metadata values
+      const authorName = blogPost.users?.first_name 
+        ? `${blogPost.users.first_name}${blogPost.users.last_name ? ` ${blogPost.users.last_name}` : ''}`
+        : 'Anonymous';
+      const authorImage = blogPost.users?.profile_image_url || '/default-avatar.png';
+      const publishedDate = new Date(blogPost.published_at || blogPost.created_at || '').toLocaleDateString();
+      const readTime = `${blogPost.read_time || 5} min read`;
+      const category = blogPost.category || 'General';
+      
+      // Replace all constants with actual values
+      let finalHTML = cleanedContent
+        .replace(/{TITLE}/g, blogPost.title)
+        .replace(/{SUBTITLE}/g, blogPost.subtitle || '')
+        .replace(/{CATEGORY}/g, category)
+        .replace(/{READ_TIME}/g, readTime)
+        .replace(/{AUTHOR_NAME}/g, authorName)
+        .replace(/{AUTHOR_IMAGE}/g, authorImage)
+        .replace(/{PUBLISHED_DATE}/g, publishedDate);
+      
+      // Inject the blog content
+      const contentWithHTML = blogPost.content.replace(/\n/g, '<br>').replace(/\s{2,}/g, '&nbsp;&nbsp;');
+      finalHTML = finalHTML.replace(
+        '<!-- CONTENT_PLACEHOLDER -->',
+        `<div class="blog-body">${contentWithHTML}</div>`
+      );
+      
+      return finalHTML;
     } else {
       // Fallback: return the original HTML
       return existingHTML;

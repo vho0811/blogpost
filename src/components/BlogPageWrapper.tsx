@@ -5,6 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
 import SimpleAIDesignButton from '@/components/SimpleAIDesignButton';
 import ReadingProgressBar from '@/components/ReadingProgressBar';
+import InteractionSection from '@/components/InteractionSection';
 import Link from 'next/link';
 
 interface BlogPageWrapperProps {
@@ -99,6 +100,7 @@ export default function BlogPageWrapper({ blogId }: BlogPageWrapperProps) {
                 {blogPost?.subtitle && (
                   <p className="text-xl text-gray-600 mb-8">{blogPost.subtitle}</p>
                 )}
+                
                 <div className="prose prose-lg max-w-none">
                   <div dangerouslySetInnerHTML={{ __html: blogPost?.content || '' }} />
                 </div>
@@ -107,6 +109,11 @@ export default function BlogPageWrapper({ blogId }: BlogPageWrapperProps) {
           )}
         </div>
       </div>
+      
+      {/* Interaction Section */}
+      {blogPost && blogPost.id && (
+        <InteractionSection blogPostId={blogPost.id} initialLikesCount={blogPost.likes || 0} />
+      )}
     </>
   );
 } 

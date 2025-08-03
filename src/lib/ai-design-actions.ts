@@ -55,7 +55,7 @@ Analyze this blog content and suggest design settings:
 
 Title: ${blogData.title}
 Subtitle: ${blogData.subtitle}
-Content: ${content.substring(0, 1000)} // First 1000 chars
+Content: ${content.substring(0, 5000)} // First 5000 chars
 Category: ${blogData.category}
 Tags: ${blogData.tags?.join(', ') || 'None'}
 

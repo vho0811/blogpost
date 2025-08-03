@@ -317,7 +317,15 @@ export class BlogDatabase {
     try {
       const { data, error } = await this.supabase
         .from('blog_posts')
-        .select('*')
+        .select(`
+          *,
+          users!blog_posts_user_id_fkey (
+            username,
+            first_name,
+            last_name,
+            profile_image_url
+          )
+        `)
         .eq('id', id)
         .single();
 
@@ -337,7 +345,15 @@ export class BlogDatabase {
     try {
       const { data, error } = await this.supabase
         .from('blog_posts')
-        .select('*')
+        .select(`
+          *,
+          users!blog_posts_user_id_fkey (
+            username,
+            first_name,
+            last_name,
+            profile_image_url
+          )
+        `)
         .eq('slug', slug)
         .eq('status', 'published')
         .single();
@@ -566,6 +582,299 @@ export class BlogDatabase {
       await this.supabase.rpc('increment_likes', { blog_post_id: blogPostId });
     } catch (error) {
       console.error('Error incrementing likes:', error);
+    }
+  }
+
+  // Comments functionality
+  async addComment(blogPostId: string, content: string, clerkUserId: string): Promise<any> {
+    try {
+      // Get current user
+      const user = await this.getCurrentUser(clerkUserId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const { data, error } = await this.supabase
+        .from('comments')
+        .insert({
+          blog_post_id: blogPostId,
+          user_id: user.id,
+          content: content
+        })
+        .select(`
+          *,
+          users (
+            username,
+            first_name,
+            last_name,
+            profile_image_url
+          )
+        `)
+        .single();
+
+      if (error) {
+        console.error('Error adding comment:', error);
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      throw error;
+    }
+  }
+
+  async getComments(blogPostId: string): Promise<any[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('comments')
+        .select(`
+          *,
+          users (
+            username,
+            first_name,
+            last_name,
+            profile_image_url
+          )
+        `)
+        .eq('blog_post_id', blogPostId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching comments:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      return [];
+    }
+  }
+
+  async updateComment(commentId: string, content: string, clerkUserId: string): Promise<any> {
+    try {
+      const currentUser = await this.getCurrentUser(clerkUserId);
+      if (!currentUser) {
+        throw new Error('User not found');
+      }
+
+      // Get the comment to check permissions
+      const { data: comment, error: fetchError } = await this.supabase
+        .from('comments')
+        .select('*')
+        .eq('id', commentId)
+        .single();
+
+      if (fetchError || !comment) {
+        console.error('Error fetching comment:', fetchError);
+        throw new Error('Comment not found');
+      }
+
+      // Check if user can update: comment owner only for now
+      const isCommentOwner = comment.user_id === currentUser.id;
+
+      if (!isCommentOwner) {
+        throw new Error('User not authorized to update this comment');
+      }
+
+      const { data, error } = await this.supabase
+        .from('comments')
+        .update({
+          content: content,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', commentId)
+        .select(`
+          *,
+          users (
+            username,
+            first_name,
+            last_name,
+            profile_image_url
+          )
+        `)
+        .single();
+
+      if (error) {
+        console.error('Error updating comment:', error);
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      throw error;
+    }
+  }
+
+  async deleteComment(commentId: string, clerkUserId: string): Promise<boolean> {
+    try {
+      const currentUser = await this.getCurrentUser(clerkUserId);
+      if (!currentUser) {
+        throw new Error('User not found');
+      }
+
+      // Get the comment to check permissions
+      const { data: comment, error: fetchError } = await this.supabase
+        .from('comments')
+        .select('*')
+        .eq('id', commentId)
+        .single();
+
+      if (fetchError || !comment) {
+        console.error('Error fetching comment:', fetchError);
+        return false;
+      }
+
+      // Check if user can delete: comment owner only for now
+      const isCommentOwner = comment.user_id === currentUser.id;
+
+      if (!isCommentOwner) {
+        console.error('User not authorized to delete this comment');
+        return false;
+      }
+
+      const { error } = await this.supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) {
+        console.error('Error deleting comment:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      return false;
+    }
+  }
+
+  // Likes functionality
+  async toggleLike(blogPostId: string, clerkUserId: string): Promise<{ liked: boolean; likesCount: number }> {
+    try {
+      console.log('Toggling like for user:', clerkUserId, 'blog post:', blogPostId);
+
+      // Get current user
+      const currentUser = await this.getCurrentUser(clerkUserId);
+      if (!currentUser) {
+        throw new Error('User not found');
+      }
+
+      // Check if like already exists
+      const { data: existingLike } = await this.supabase
+        .from('likes')
+        .select('id')
+        .eq('blog_post_id', blogPostId)
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (existingLike) {
+        // Remove like
+        const { error: deleteError } = await this.supabase
+          .from('likes')
+          .delete()
+          .eq('blog_post_id', blogPostId)
+          .eq('user_id', currentUser.id);
+
+        if (deleteError) {
+          console.error('Error removing like:', deleteError);
+          throw deleteError;
+        }
+
+        // Decrement likes count
+        const { data: currentPost } = await this.supabase
+          .from('blog_posts')
+          .select('likes')
+          .eq('id', blogPostId)
+          .single();
+
+        const newLikesCount = Math.max((currentPost?.likes || 0) - 1, 0);
+        
+        const { error: updateError } = await this.supabase
+          .from('blog_posts')
+          .update({ likes: newLikesCount })
+          .eq('id', blogPostId);
+
+        if (updateError) {
+          console.error('Error updating likes count:', updateError);
+          throw updateError;
+        }
+
+        // Get updated likes count
+        const { data: updatedPost } = await this.supabase
+          .from('blog_posts')
+          .select('likes')
+          .eq('id', blogPostId)
+          .single();
+
+        return { liked: false, likesCount: updatedPost?.likes || 0 };
+      } else {
+        // Add like
+        const { error: insertError } = await this.supabase
+          .from('likes')
+          .insert({
+            blog_post_id: blogPostId,
+            user_id: currentUser.id
+          });
+
+        if (insertError) {
+          console.error('Error adding like:', insertError);
+          throw insertError;
+        }
+
+        // Increment likes count
+        const { data: currentPost } = await this.supabase
+          .from('blog_posts')
+          .select('likes')
+          .eq('id', blogPostId)
+          .single();
+
+        const newLikesCount = (currentPost?.likes || 0) + 1;
+        
+        const { error: updateError } = await this.supabase
+          .from('blog_posts')
+          .update({ likes: newLikesCount })
+          .eq('id', blogPostId);
+
+        if (updateError) {
+          console.error('Error updating likes count:', updateError);
+          throw updateError;
+        }
+
+        // Get updated likes count
+        const { data: updatedPost } = await this.supabase
+          .from('blog_posts')
+          .select('likes')
+          .eq('id', blogPostId)
+          .single();
+
+        return { liked: true, likesCount: updatedPost?.likes || 0 };
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      throw error;
+    }
+  }
+
+  async checkIfLiked(blogPostId: string, clerkUserId: string): Promise<boolean> {
+    try {
+      const user = await this.getCurrentUser(clerkUserId);
+      if (!user) return false;
+
+      const { data } = await this.supabase
+        .from('likes')
+        .select('id')
+        .eq('blog_post_id', blogPostId)
+        .eq('user_id', user.id)
+        .single();
+
+      return !!data;
+    } catch (error) {
+      console.error('Error checking if liked:', error);
+      return false;
     }
   }
 

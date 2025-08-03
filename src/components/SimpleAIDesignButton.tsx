@@ -9,6 +9,7 @@ interface SimpleAIDesignButtonProps {
   blogId: string;
   blogPost?: {
     user_id?: string;
+    content?: string;
   } | null;
 }
 
