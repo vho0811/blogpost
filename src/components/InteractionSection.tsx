@@ -180,6 +180,7 @@ export default function InteractionSection({ blogPostId, initialLikesCount = 0, 
       if (updatedComment) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setComments(prev => prev.map(comment => 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           comment.id === commentId ? updatedComment as any : comment
         ));
       }

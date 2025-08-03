@@ -60,7 +60,6 @@ export default function LikeButton({ blogPostId, initialLikesCount = 0, classNam
         gap: '8px',
         padding: '12px 20px',
         borderRadius: '12px',
-        border: 'none',
         cursor: isLoading ? 'not-allowed' : 'pointer',
         fontFamily: 'system-ui, -apple-system, sans-serif',
         fontSize: '14px',
