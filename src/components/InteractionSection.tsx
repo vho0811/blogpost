@@ -147,8 +147,8 @@ export default function InteractionSection({ blogPostId, initialLikesCount = 0, 
       setIsSubmitting(true);
       const newCommentData = await blogDatabase.addComment(blogPostId, newComment.trim(), user.id);
       if (newCommentData) {
-        // @ts-ignore - Type mismatch between database return type and Comment interface
-        setComments(prev => [newCommentData, ...prev]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setComments(prev => [newCommentData as any, ...prev]);
       }
       setNewComment('');
     } catch (error) {
