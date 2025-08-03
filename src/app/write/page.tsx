@@ -23,30 +23,19 @@ function WritePageContent() {
   });
   
   const [isSaving, setIsSaving] = useState(false);
-
   const [savedMessage, setSavedMessage] = useState('');
+  const [showTips, setShowTips] = useState(false);
 
   const handleSave = useCallback(async (status: 'draft' | 'published') => {
-         if (!blogPost.title || !blogPost.content) {
+    if (!blogPost.title || !blogPost.content) {
       showNotification('Please provide at least a title and content', 'warning');
       return;
     }
     setIsSaving(true);
     try {
-      // For existing posts, keep the original slug (never change it)
-      // For new posts, let the database generate a unique slug
-      const slug = blogPost.id && blogPost.slug ? blogPost.slug : undefined;
-      
-
-      
       // Extract featured image from content or use default
       const extractedImage = extractFeaturedImage(blogPost.content || '');
       
-      // Temporary debug - remove this later
-      if (!extractedImage && blogPost.content) {
-        console.log('🔍 DEBUG: No image extracted from content. Content preview:');
-        console.log(blogPost.content.slice(0, 500));
-      }
       const featuredImageUrl = extractedImage || 'data:image/svg+xml;base64,' + btoa(`
         <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -117,24 +106,14 @@ function WritePageContent() {
           is_ai_designed: false
         };
         // Remove any existing slug to let database generate it
-        delete (blogData as any).slug;
+        delete (blogData as Partial<BlogPost> & { slug?: string }).slug;
       }
-
-      console.log('🔍 SAVE DEBUG:', {
-        isUpdate: !!blogPost.id,
-        blogData: {
-          id: blogData.id,
-          title: blogData.title,
-          slug: blogData.slug,
-          hasSlug: 'slug' in blogData
-        }
-      });
 
       let result;
       if (blogPost.id && user) {
         result = await blogDatabase.updateBlogPost(blogPost.id, blogData, user.id);
       } else if (user) {
-        result = await blogDatabase.createBlogPost(blogData as any, user.id);
+        result = await blogDatabase.createBlogPost(blogData as Omit<BlogPost, 'id' | 'user_id' | 'created_at' | 'updated_at'>, user.id);
       }
 
       if (result) {
@@ -158,9 +137,6 @@ function WritePageContent() {
 
   // Generate initial HTML for the blog post
   const generateInitialHTML = useCallback((post: Partial<BlogPost>): string => {
-    // This function now generates a dynamic template with placeholders
-    // instead of hardcoded values, so the HTML can adapt to content changes
-    
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -382,8 +358,6 @@ function WritePageContent() {
     `;
   }, [user]);
 
-  // Slug generation is now handled by the database to ensure uniqueness
-
   // Extract the FIRST image from content for featured image
   const extractFeaturedImage = (content: string): string | undefined => {
     if (!content) return undefined;
@@ -459,17 +433,24 @@ function WritePageContent() {
       if (blogPost.title && blogPost.content) {
         handleSave('draft');
       }
-    }, 30000); // Auto-save every 30 seconds (reduced from 10)
+    }, 30000); // Auto-save every 30 seconds
 
     return () => clearTimeout(autoSave);
   }, [blogPost, handleSave]);
 
+  // Calculate completion percentage
+  const completionPercentage = Math.min(100, 
+    ((blogPost.title ? 25 : 0) + 
+     (blogPost.subtitle ? 15 : 0) + 
+     (blogPost.content ? 60 : 0))
+  );
+
   // Don't render anything if not loaded or not authenticated
   if (!isLoaded || !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-4"></div>
           <p className="text-white">Loading...</p>
         </div>
       </div>
@@ -477,34 +458,58 @@ function WritePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
+    <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-white/10">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-white hover:text-gray-300 transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </Link>
+            <div className="flex items-center space-x-6">
+              <Link href="/" className="text-white/60 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </Link>
+              
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-white/60">
+                  {editId ? 'Editing Story' : 'New Story'}
+                </div>
+                <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-white transition-all duration-500 ease-out"
+                    style={{ width: `${completionPercentage}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs text-white/40">{completionPercentage}%</span>
+              </div>
+            </div>
             
             <div className="flex items-center space-x-4">
               {savedMessage && (
-                <span className="text-green-400 text-sm">{savedMessage}</span>
+                <span className="text-white/80 text-sm font-medium">{savedMessage}</span>
               )}
+              
+              <button
+                onClick={() => setShowTips(!showTips)}
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
               
               <button
                 onClick={() => handleSave('draft')}
                 disabled={isSaving}
-                className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 transition-colors"
+                className="px-6 py-2.5 text-white/80 bg-white/5 rounded-full hover:bg-white/10 transition-all duration-300 border border-white/10 text-sm font-medium disabled:opacity-50"
               >
                 {isSaving ? 'Saving...' : editId ? 'Update Draft' : 'Save Draft'}
               </button>
               
               <button
                 onClick={() => handleSave('published')}
-                                 disabled={isSaving || !blogPost.title || !blogPost.content}
-                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-400 hover:to-purple-500 disabled:opacity-50 transition-all"
+                disabled={isSaving || !blogPost.title || !blogPost.content}
+                className="px-6 py-2.5 bg-white text-black rounded-full hover:bg-white/90 transition-all duration-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSaving ? (editId ? 'Updating...' : 'Publishing...') : (editId ? 'Update & Publish' : 'Publish')}
               </button>
@@ -513,81 +518,144 @@ function WritePageContent() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Title */}
-          <div>
-            <input
-              type="text"
-              placeholder="Enter your blog title..."
-                             value={blogPost.title}
-               onChange={(e) => setBlogPost({ ...blogPost, title: e.target.value })}
-              className="w-full text-4xl md:text-5xl font-bold bg-transparent text-white placeholder-gray-500 border-none outline-none resize-none"
-            />
-          </div>
-
-          {/* Subtitle */}
-          <div>
-            <input
-              type="text"
-              placeholder="Add a subtitle (optional)..."
-                             value={blogPost.subtitle}
-               onChange={(e) => setBlogPost({ ...blogPost, subtitle: e.target.value })}
-              className="w-full text-xl text-gray-300 bg-transparent placeholder-gray-600 border-none outline-none"
-            />
-          </div>
-
-                    {/* Category */}
-          <div className="space-y-4">
-            <label className="block text-white font-medium text-lg mb-3">Category</label>
-            <div className="relative">
-              <select
-                value={blogPost.category}
-                onChange={(e) => setBlogPost({ ...blogPost, category: e.target.value })}
-                className="w-full p-4 pr-12 bg-gradient-to-r from-gray-800 to-gray-700 text-white border-2 border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all duration-300 hover:border-gray-500 hover:from-gray-750 hover:to-gray-650 appearance-none cursor-pointer backdrop-blur-sm shadow-lg"
-                style={{
-                  backgroundImage: 'linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(55, 65, 81, 0.9) 100%)',
-                  backdropFilter: 'blur(12px)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                <option value="General" className="bg-gray-800 text-white py-2">📝 General</option>
-                <option value="Technology" className="bg-gray-800 text-white py-2">💻 Technology</option>
-                <option value="Lifestyle" className="bg-gray-800 text-white py-2">🌟 Lifestyle</option>
-                <option value="Business" className="bg-gray-800 text-white py-2">💼 Business</option>
-                <option value="Travel" className="bg-gray-800 text-white py-2">✈️ Travel</option>
-                <option value="Food" className="bg-gray-800 text-white py-2">🍽️ Food</option>
-                <option value="Health" className="bg-gray-800 text-white py-2">🏥 Health</option>
-                <option value="Sports" className="bg-gray-800 text-white py-2">⚽ Sports</option>
-                <option value="Entertainment" className="bg-gray-800 text-white py-2">🎬 Entertainment</option>
-              </select>
-              
-              {/* Custom dropdown arrow */}
-              <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400 transition-transform duration-200 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+      {/* Writing Tips Panel */}
+      {showTips && (
+        <div className="bg-white/5 border-b border-white/10 px-6 py-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+              <div className="space-y-2">
+                <h3 className="text-white font-medium">Writing Tips</h3>
+                <ul className="text-white/60 space-y-1 text-xs">
+                  <li>• Start with a compelling title</li>
+                  <li>• Use clear, concise language</li>
+                  <li>• Break up text with headings</li>
+                </ul>
               </div>
-              
-              {/* Glow effect on focus */}
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 to-purple-500/0 transition-all duration-300 pointer-events-none opacity-0 focus-within:opacity-100" style={{
-                backgroundImage: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%)'
-              }}></div>
+              <div className="space-y-2">
+                <h3 className="text-white font-medium">Formatting</h3>
+                <ul className="text-white/60 space-y-1 text-xs">
+                  <li>• Use # for main headings</li>
+                  <li>• Use ## for subheadings</li>
+                  <li>• Add images to enhance content</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-white font-medium">AI Enhancement</h3>
+                <ul className="text-white/60 space-y-1 text-xs">
+                  <li>• Publish first, then enhance with AI</li>
+                  <li>• AI can improve visual design</li>
+                  <li>• Customize colors and layouts</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Left Sidebar - Story Info */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+              <h3 className="text-white font-medium mb-4">Story Details</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-white/60 text-xs font-medium uppercase tracking-wide block mb-2">Category</label>
+                  <select
+                    value={blogPost.category}
+                    onChange={(e) => setBlogPost({ ...blogPost, category: e.target.value })}
+                    className="w-full p-3 bg-white/5 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-white/20 focus:border-white/20 focus:outline-none transition-all duration-300 text-sm"
+                  >
+                    <option value="General" className="bg-black text-white">General</option>
+                    <option value="Technology" className="bg-black text-white">Technology</option>
+                    <option value="Design" className="bg-black text-white">Design</option>
+                    <option value="Business" className="bg-black text-white">Business</option>
+                    <option value="Lifestyle" className="bg-black text-white">Lifestyle</option>
+                    <option value="Science" className="bg-black text-white">Science</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="text-white/60 text-xs font-medium uppercase tracking-wide block mb-2">Read Time</label>
+                  <div className="text-white/80 text-sm">
+                    {blogPost.content ? `${Math.ceil((blogPost.content.length || 0) / 200)} min read` : '0 min read'}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-white/60 text-xs font-medium uppercase tracking-wide block mb-2">Status</label>
+                  <div className="text-white/80 text-sm">
+                    {editId ? 'Editing existing story' : 'Creating new story'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+              <h3 className="text-white font-medium mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowTips(!showTips)}
+                  className="w-full text-left p-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200 text-sm"
+                >
+                  {showTips ? 'Hide' : 'Show'} Writing Tips
+                </button>
+                <Link
+                  href="/"
+                  className="block w-full text-left p-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200 text-sm"
+                >
+                  View All Stories
+                </Link>
+              </div>
             </div>
           </div>
 
-          {/* Content Editor */}
-          <div className="space-y-4">
-            <label className="block text-white font-medium">Content</label>
-            <BlockNoteEditor
-                             initialContent={blogPost.content}
-               onChange={(content) => setBlogPost({ ...blogPost, content })}
-              placeholder="Start writing your blog content..."
-            />
-            <p className="text-gray-400 text-sm">
-              Tip: Use the rich text editor with blocks, headings, lists, and more. After publishing, you can enhance the visual appearance with AI design.
-            </p>
+          {/* Main Writing Area */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Title */}
+            <div className="space-y-2">
+              <label className="text-white/60 text-sm font-medium uppercase tracking-wide">Title</label>
+              <input
+                type="text"
+                placeholder="Enter your story title..."
+                value={blogPost.title}
+                onChange={(e) => setBlogPost({ ...blogPost, title: e.target.value })}
+                className="w-full text-3xl md:text-4xl font-light bg-transparent text-white placeholder-white/30 border-none outline-none resize-none leading-tight"
+              />
+            </div>
+
+            {/* Subtitle */}
+            <div className="space-y-2">
+              <label className="text-white/60 text-sm font-medium uppercase tracking-wide">Subtitle</label>
+              <input
+                type="text"
+                placeholder="Add a subtitle to your story..."
+                value={blogPost.subtitle}
+                onChange={(e) => setBlogPost({ ...blogPost, subtitle: e.target.value })}
+                className="w-full text-lg text-white/80 bg-transparent placeholder-white/30 border-none outline-none leading-relaxed"
+              />
+            </div>
+
+            {/* Content Editor */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-white/60 text-sm font-medium uppercase tracking-wide">Content</label>
+                <div className="text-white/40 text-xs">
+                  {blogPost.content ? `${Math.ceil((blogPost.content.length || 0) / 200)} min read` : '0 min read'}
+                </div>
+              </div>
+              <div className="border border-white/10 rounded-lg overflow-hidden bg-white/5">
+                <BlockNoteEditor
+                  initialContent={blogPost.content}
+                  onChange={(content) => setBlogPost({ ...blogPost, content })}
+                  placeholder="Start writing your story..."
+                />
+              </div>
+              <p className="text-white/40 text-xs">
+                Use the rich text editor to create your story. After publishing, you can enhance the visual design with AI.
+              </p>
+            </div>
           </div>
         </div>
       </main>
@@ -597,7 +665,11 @@ function WritePageContent() {
 
 export default function WritePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center"><div className="text-white">Loading...</div></div>}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    }>
       <WritePageContent />
     </Suspense>
   );

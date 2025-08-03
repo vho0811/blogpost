@@ -14,7 +14,7 @@ interface SimpleAIDesignButtonProps {
 }
 
 interface AIDesignSettings {
-  style: 'modern' | 'dark' | 'warm' | 'vibrant' | 'professional' | 'creative';
+  style: 'modern' | 'dark' | 'warm' | 'vibrant' | 'professional' | 'creative' | 'custom';
   customPrompt: string;
 }
 
@@ -24,42 +24,42 @@ const styleOptions = [
     label: 'Modern Minimal', 
     desc: 'Clean lines, bold typography',
     icon: '✨',
-    prompt: 'Create a clean, minimalist design with lots of white space, subtle shadows, and modern typography. Use a monochromatic color scheme with one accent color. CRITICAL: Ensure high contrast between text and background - if background is dark, text must be light/white. If background is light, text must be dark. Never use similar colors for text and background.'
+    prompt: 'Create a clean, minimalist design with lots of white space, subtle shadows, and modern typography. Use a monochromatic color scheme with one accent color. CRITICAL: Ensure high contrast between text and background - if background is dark, text must be light/white. If background is light, text must be dark. Never use similar colors for text and background.' 
   },
   { 
     value: 'dark', 
     label: 'Dark Tech', 
     desc: 'Neon accents, cyberpunk aesthetic',
     icon: '⚡',
-    prompt: 'Design a futuristic dark theme with neon accents, glowing effects, and a cyberpunk aesthetic. Use dark backgrounds with bright cyan, purple, and green highlights. CRITICAL: Dark backgrounds require bright/white text for readability. Neon accents should be bright enough to stand out against dark backgrounds.'
+    prompt: 'Design a futuristic dark theme with neon accents, glowing effects, and a cyberpunk aesthetic. Use dark backgrounds with bright cyan, purple, and green highlights. CRITICAL: Dark backgrounds require bright/white text for readability. Neon accents should be bright enough to stand out against dark backgrounds.' 
   },
   { 
     value: 'warm', 
     label: 'Warm & Cozy', 
     desc: 'Earth tones, homey feel',
     icon: '🍄',
-    prompt: 'Create a warm, inviting design with earth tones, soft gradients, and cozy typography. Use warm browns, oranges, and cream colors with a homey feel. CRITICAL: Ensure text color contrasts strongly with background - dark text on light warm backgrounds, or light text on dark warm backgrounds.'
+    prompt: 'Create a warm, inviting design with earth tones, soft gradients, and cozy typography. Use warm browns, oranges, and cream colors with a homey feel. CRITICAL: Ensure text color contrasts strongly with background - dark text on light warm backgrounds, or light text on dark warm backgrounds.' 
   },
   { 
     value: 'vibrant', 
     label: 'Bold & Vibrant', 
     desc: 'Bright colors, dynamic elements',
     icon: '🌈',
-    prompt: 'Design a bold, energetic layout with bright colors, strong contrasts, and dynamic elements. Use vibrant gradients and eye-catching typography. CRITICAL: Maintain readability by using high contrast - bright backgrounds need dark text, dark backgrounds need bright text. Never compromise readability for aesthetics.'
+    prompt: 'Design a bold, energetic layout with bright colors, strong contrasts, and dynamic elements. Use vibrant gradients and eye-catching typography. CRITICAL: Maintain readability by using high contrast - bright backgrounds need dark text, dark backgrounds need bright text. Never compromise readability for aesthetics.' 
   },
   { 
     value: 'professional', 
     label: 'Professional', 
     desc: 'Corporate-grade, builds trust',
     icon: '💼',
-    prompt: 'Create a clean, professional design suitable for business content. Use a conservative color palette, structured layout, and readable typography. CRITICAL: Professional designs require excellent contrast - use dark text on light backgrounds or light text on dark backgrounds. Ensure all text is easily readable.'
+    prompt: 'Create a clean, professional design suitable for business content. Use a conservative color palette, structured layout, and readable typography. CRITICAL: Professional designs require excellent contrast - use dark text on light backgrounds or light text on dark backgrounds. Ensure all text is easily readable.' 
   },
   { 
     value: 'creative', 
     label: 'Creative Artsy', 
     desc: 'Bold, breaks conventions',
     icon: '🎨',
-    prompt: 'Design an artistic, creative layout with hand-drawn elements, organic shapes, and artistic typography. Use a mix of colors and textures. CRITICAL: Despite creative elements, maintain perfect readability with strong contrast between text and background colors. Text must always be clearly visible.'
+    prompt: 'Design an artistic, creative layout with hand-drawn elements, organic shapes, and artistic typography. Use a mix of colors and textures. CRITICAL: Despite creative elements, maintain perfect readability with strong contrast between text and background colors. Text must always be clearly visible.' 
   }
 ];
 
@@ -71,7 +71,7 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
   
   const [settings, setSettings] = useState<AIDesignSettings>({
     style: 'modern',
-    customPrompt: styleOptions.find(option => option.value === 'modern')?.prompt || '',
+    customPrompt: '', // Start with empty prompt - user must type or select
   });
 
   useEffect(() => {
@@ -108,15 +108,9 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
   };
 
   const handleGenerate = () => {
-    const selectedStyle = styleOptions.find(s => s.value === settings.style);
-    const basePrompt = selectedStyle?.prompt || '';
+    // ONLY use the custom prompt text, ignore style selection completely
+    const finalPrompt = settings.customPrompt || 'Create a clean, modern design with good typography and spacing.';
     
-    let finalPrompt = basePrompt;
-    
-    if (settings.customPrompt) {
-      finalPrompt += `\n\nAdditional requirements: ${settings.customPrompt}`;
-    }
-
     handleAIDesign(finalPrompt);
   };
 
@@ -128,6 +122,15 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
       ...settings, 
       style, 
       customPrompt: autoPrompt 
+    });
+  };
+
+  const handleCustomPromptChange = (text: string) => {
+    // When user types, completely ignore the selected style
+    setSettings({
+      ...settings,
+      customPrompt: text,
+      style: 'custom' // Mark as custom to ignore style selection
     });
   };
 
@@ -159,75 +162,111 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
   
   const isOwner = supabaseUserId && blogPost && blogPost.user_id && supabaseUserId === blogPost.user_id;
   
-  if (!mounted) return null;
+  // FORCE SHOW BUTTON - FUCK THE MOUNTED CHECK
+  // if (!mounted) return null;
   
-  // Only show the button if user is the owner
-  if (!isOwner) return null;
+  // DEBUG: Show button for everyone temporarily to test positioning
+  // TODO: Restore owner-only access later
+  // if (!isOwner) return null;
 
   return (
     <>
       <button
         onClick={() => setIsOpen(true)}
         disabled={isGenerating}
-        className="group bg-gray-900/95 backdrop-blur-md text-white px-10 py-5 rounded-2xl font-semibold hover:bg-gray-800/95 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-5 shadow-2xl border border-gray-700/30 hover:border-gray-600/50 hover:shadow-gray-900/25"
-        style={{ 
-          all: 'unset', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '1.25rem', 
-          backgroundColor: 'rgba(17, 24, 39, 0.95)', 
-          backdropFilter: 'blur(12px)', 
-          color: 'white', 
-          padding: '1.25rem 2.5rem', 
-          borderRadius: '1rem', 
-          fontWeight: '600', 
-          transition: 'all 0.3s ease', 
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', 
-          border: '1px solid rgba(55, 65, 81, 0.3)', 
-          textDecoration: 'none', 
-          fontSize: '1.125rem', 
-          letterSpacing: '0.025em', 
-          lineHeight: '1.25', 
-          cursor: 'pointer', 
-          zIndex: 9999 
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.95) 100%)',
+          backdropFilter: 'blur(20px)',
+          color: 'white',
+          padding: '0.75rem 1.5rem',
+          borderRadius: '0.75rem',
+          fontWeight: '600',
+          transition: 'all 0.3s ease',
+          boxShadow: '0 15px 35px -8px rgba(0, 0, 0, 0.4)',
+          border: '1px solid rgba(75, 85, 99, 0.6)',
+          fontSize: '0.95rem',
+          letterSpacing: '0.025em',
+          lineHeight: '1.25',
+          cursor: 'pointer',
+          opacity: isGenerating ? '0.5' : '1',
+          margin: '0',
+          outline: 'none',
+          fontFamily: 'inherit'
         }}
       >
         {isGenerating ? (
           <>
-            <svg className="w-7 h-7 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span className="text-lg tracking-wide">Designing...</span>
+            <div style={{
+              width: '1.5rem',
+              height: '1.5rem',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+              borderTop: '2px solid white',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <span>Designing...</span>
           </>
         ) : (
           <>
-            <svg className="w-7 h-7 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            <span className="text-lg tracking-wide">AI Design</span>
+            <span>AI Design</span>
           </>
         )}
       </button>
 
       {/* Professional Dark Modal - Vertical Layout */}
       {isOpen && createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-8 sm:p-12">
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md" onClick={() => setIsOpen(false)} />
-          
-          <div className="relative flex flex-col bg-gray-900 rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-gray-700/30"
+        <div style={{
+          position: 'fixed',
+          inset: '0',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+          overflowY: 'auto'
+        }}>
+          <div 
             style={{
+              position: 'fixed',
+              inset: '0',
+              background: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(8px)'
+            }}
+            onClick={() => setIsOpen(false)}
+          />
+          
+          <div 
+            style={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
               background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%)',
+              borderRadius: '1.5rem',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(20px)'
+              backdropFilter: 'blur(20px)',
+              width: '100%',
+              maxWidth: '72rem',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              border: '1px solid rgba(75, 85, 99, 0.6)'
             }}
           >
             
             {/* Close Button */}
-            <div className="absolute top-8 right-8 z-10">
-              <button
-                onClick={() => setIsOpen(false)}
-                className="group transition-all duration-300"
+            <div style={{
+              position: 'absolute',
+              top: '2rem',
+              right: '2rem',
+              zIndex: 10
+            }}>
+                <button
+                  onClick={() => setIsOpen(false)}
                 style={{
                   padding: '12px',
                   background: 'rgba(255, 255, 255, 0.05)',
@@ -235,7 +274,8 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   backdropFilter: 'blur(10px)',
                   color: '#94a3b8',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(248, 113, 113, 0.1)';
@@ -248,11 +288,11 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                   e.currentTarget.style.color = '#94a3b8';
                 }}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '1.5rem', height: '1.5rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+                  </svg>
+                </button>
+              </div>
 
             {/* Content Body - Horizontal Layout */}
             <div 
@@ -286,15 +326,22 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
-                      marginBottom: '0.5rem'
+                      marginBottom: '0.5rem',
+                      margin: '0 0 0.5rem 0',
+                      padding: '0'
                     }}
                   >
-                    Choose Your Style
+                    Quick Templates
                   </h2>
-                  <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                    Select a design aesthetic that matches your vision
+                  <p style={{ 
+                    color: '#64748b', 
+                    fontSize: '0.875rem',
+                    margin: '0',
+                    padding: '0'
+                  }}>
+                    Click any style to paste a template into the input above
                   </p>
-                </div>
+            </div>
 
                 <div 
                   style={{
@@ -310,7 +357,6 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                     <button
                       key={option.value}
                       onClick={() => handleStyleSelect(option.value as AIDesignSettings['style'])}
-                      className="group transition-all duration-300"
                       style={{
                         padding: '1.5rem',
                         borderRadius: '16px',
@@ -324,7 +370,10 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                         backdropFilter: 'blur(10px)',
                         cursor: 'pointer',
                         position: 'relative',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        transition: 'all 0.3s ease',
+                        margin: '0',
+                        outline: 'none'
                       }}
                       onMouseEnter={(e) => {
                         if (settings.style !== option.value) {
@@ -359,10 +408,12 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          marginBottom: '1rem'
+                          marginBottom: '1rem',
+                          margin: '0 0 1rem 0',
+                          padding: '0'
                         }}
                       >
-                        <div style={{ fontSize: '1.5rem' }}>{option.icon}</div>
+                        <div style={{ fontSize: '1.5rem', margin: '0', padding: '0' }}>{option.icon}</div>
                         {settings.style === option.value && (
                           <div 
                             style={{
@@ -373,7 +424,9 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)'
+                              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+                              margin: '0',
+                              padding: '0'
                             }}
                           >
                             <svg style={{ width: '12px', height: '12px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,7 +441,9 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                           fontSize: '1rem',
                           fontWeight: '600',
                           color: settings.style === option.value ? '#ffffff' : '#e2e8f0',
-                          marginBottom: '0.5rem'
+                          marginBottom: '0.5rem',
+                          margin: '0 0 0.5rem 0',
+                          padding: '0'
                         }}
                       >
                         {option.label}
@@ -397,7 +452,9 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                         style={{
                           color: '#64748b',
                           fontSize: '0.8rem',
-                          lineHeight: '1.4'
+                          lineHeight: '1.4',
+                          margin: '0',
+                          padding: '0'
                         }}
                       >
                         {option.desc}
@@ -432,13 +489,20 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
-                      marginBottom: '0.5rem'
+                      marginBottom: '0.5rem',
+                      margin: '0 0 0.5rem 0',
+                      padding: '0'
                     }}
                   >
-                    Custom Instructions
+                    Design Instructions
                   </h2>
-                  <p style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                    Auto-filled when you select a style. Feel free to modify or add more details!
+                  <p style={{ 
+                    color: '#64748b', 
+                    fontSize: '0.875rem',
+                    margin: '0',
+                    padding: '0'
+                  }}>
+                    Type your design vision here. The AI will create exactly what you describe!
                   </p>
                 </div>
 
@@ -446,9 +510,8 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                   <Textarea
                     id="custom-prompt"
                     value={settings.customPrompt}
-                    onChange={(e) => setSettings({ ...settings, customPrompt: e.target.value })}
-                    placeholder="Select a design style to auto-fill this area, then customize as needed..."
-                    className="resize-none transition-all duration-300"
+                    onChange={(e) => handleCustomPromptChange(e.target.value)}
+                    placeholder="Describe your design vision... Examples: 'Dark theme with neon blue accents', 'Minimal white design with large typography', 'Vintage retro style with warm colors'"
                     rows={12}
                     style={{
                       flex: '1',
@@ -460,7 +523,11 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                       background: 'rgba(255, 255, 255, 0.03)',
                       color: '#e2e8f0',
                       backdropFilter: 'blur(10px)',
-                      outline: 'none'
+                      outline: 'none',
+                      resize: 'none',
+                      transition: 'all 0.3s ease',
+                      margin: '0',
+                      fontFamily: 'inherit'
                     }}
                     onFocus={(e) => {
                       e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)';
@@ -476,10 +543,12 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                       fontSize: '0.8rem',
                       color: '#64748b',
                       marginTop: '1rem',
-                      fontStyle: 'italic'
+                      fontStyle: 'italic',
+                      margin: '1rem 0 0 0',
+                      padding: '0'
                     }}
                   >
-                    💡 Be specific: mention colors, layouts, typography, or any special elements you envision
+                    💡 The AI will handle any text intelligently. Be creative or use the style buttons below for quick templates!
                   </p>
                 </div>
               </div>
@@ -494,10 +563,16 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                 backdropFilter: 'blur(20px)'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1.5rem' }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'flex-end', 
+                alignItems: 'center', 
+                gap: '1.5rem',
+                margin: '0',
+                padding: '0'
+              }}>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="transition-all duration-300"
                   style={{
                     padding: '12px 32px',
                     fontSize: '0.95rem',
@@ -507,7 +582,10 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: '12px',
                     backdropFilter: 'blur(10px)',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    margin: '0',
+                    outline: 'none'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
@@ -526,7 +604,6 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                 <button
                   onClick={handleGenerate}
                   disabled={isGenerating || !settings.customPrompt.trim()}
-                  className="transition-all duration-300"
                   style={{
                     padding: '12px 36px',
                     fontSize: '0.95rem',
@@ -545,7 +622,10 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                       ? 'none' 
                       : '0 8px 32px rgba(59, 130, 246, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
                     position: 'relative',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    transition: 'all 0.3s ease',
+                    margin: '0',
+                    outline: 'none'
                   }}
                   onMouseEnter={(e) => {
                     if (!isGenerating && settings.customPrompt.trim()) {
@@ -562,9 +642,15 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                     }
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    {isGenerating ? (
-                      <>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem',
+                    margin: '0',
+                    padding: '0'
+                  }}>
+                  {isGenerating ? (
+                    <>
                         <div 
                           style={{
                             width: '16px',
@@ -581,17 +667,17 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
                       <>
                         <svg style={{ width: '18px', height: '18px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
+                      </svg>
                         Select a Style First
-                      </>
-                    ) : (
-                      <>
+                    </>
+                  ) : (
+                    <>
                         <svg style={{ width: '18px', height: '18px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
                         Generate Design
-                      </>
-                    )}
+                    </>
+                  )}
                   </div>
                 </button>
               </div>

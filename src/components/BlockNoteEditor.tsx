@@ -32,7 +32,7 @@ export default function BlockNoteEditor({
             if (Array.isArray(parsed)) {
               return parsed;
             }
-          } catch (jsonError) {
+          } catch {
             // Fall through to other parsing methods
           }
         }
@@ -65,7 +65,7 @@ export default function BlockNoteEditor({
         }));
         
         return blocks.length > 0 ? blocks : [{ type: 'paragraph' as const, content: '' }];
-      } catch (error) {
+      } catch {
         return [{ type: 'paragraph' as const, content: '' }];
       }
     }
@@ -104,7 +104,7 @@ export default function BlockNoteEditor({
         try {
           const blocks = await editor.tryParseHTMLToBlocks(initialContent);
           editor.replaceBlocks(editor.document, blocks);
-        } catch (error) {
+        } catch {
           // Silently handle parsing errors
         }
       };
@@ -119,7 +119,7 @@ export default function BlockNoteEditor({
         // Convert blocks to HTML using BlockNote's official method
         const htmlContent = await editor.blocksToHTMLLossy(editor.document);
         onChange?.(htmlContent);
-      } catch (error) {
+      } catch {
         // Silently handle conversion errors
       }
     },
@@ -129,12 +129,12 @@ export default function BlockNoteEditor({
   // Handle content changes with debouncing
   const handleChange = useCallback(() => {
     // Clear any existing timeout
-    if ((window as any).blockNoteChangeTimeout) {
-      clearTimeout((window as any).blockNoteChangeTimeout);
+    if ((window as typeof window & { blockNoteChangeTimeout?: NodeJS.Timeout }).blockNoteChangeTimeout) {
+      clearTimeout((window as typeof window & { blockNoteChangeTimeout?: NodeJS.Timeout }).blockNoteChangeTimeout);
     }
     
     // Set a new timeout to debounce the change - INCREASED to prevent scroll jumping
-    (window as any).blockNoteChangeTimeout = setTimeout(() => {
+    (window as typeof window & { blockNoteChangeTimeout?: NodeJS.Timeout }).blockNoteChangeTimeout = setTimeout(() => {
       debouncedOnChange();
     }, 1000); // Increased from 500ms to 1000ms to prevent frequent re-renders
   }, [debouncedOnChange]);

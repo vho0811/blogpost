@@ -205,105 +205,128 @@ DO NOT put actual text content anywhere - use only the placeholders listed above
 
 // Function to analyze user prompt and determine if it's valid
 const analyzeUserPrompt = (prompt: string) => {
-  const trimmedPrompt = prompt.trim().toLowerCase();
+  const trimmedPrompt = prompt.trim();
   
-  // Check if prompt is too short or contains invalid content
-  if (trimmedPrompt.length < 10) {
-    return { isValid: false, enhancedPrompt: 'Create a clean, modern design with good typography and spacing.' };
+  // If prompt is empty or too short, provide a helpful default
+  if (trimmedPrompt.length < 5) {
+    return { 
+      isValid: true, 
+      enhancedPrompt: 'Create a clean, modern design with good typography and spacing. Use a professional color scheme and ensure excellent readability.' 
+    };
   }
   
-  // Check for inappropriate or non-design related content
+  // Check for inappropriate content (keep this for safety)
   const inappropriateKeywords = [
     'fuck', 'shit', 'ass', 'bitch', 'dick', 'porn', 'sex', 'nude', 'naked',
     'hate', 'kill', 'death', 'blood', 'gore', 'violence', 'terrorist', 'bomb'
   ];
   
   const hasInappropriateContent = inappropriateKeywords.some(keyword => 
-    trimmedPrompt.includes(keyword)
+    trimmedPrompt.toLowerCase().includes(keyword)
   );
   
   if (hasInappropriateContent) {
-    return { isValid: false, enhancedPrompt: 'Create a clean, professional design suitable for all audiences.' };
+    return { 
+      isValid: true, 
+      enhancedPrompt: 'Create a clean, professional design suitable for all audiences with good typography and spacing.' 
+    };
   }
   
-  // Check if prompt is too vague or generic
-  const vaguePhrases = [
-    'make it look good', 'make it better', 'improve it', 'fix it',
-    'change it', 'do something', 'whatever', 'idk', 'i dont know'
-  ];
-  
-  const isTooVague = vaguePhrases.some(phrase => 
-    trimmedPrompt.includes(phrase)
-  );
-  
-  if (isTooVague) {
-    return { isValid: false, enhancedPrompt: 'Create a modern, clean design with good visual hierarchy and readability.' };
-  }
-  
-  // Check if prompt is about content changes rather than design
-  const contentChangeKeywords = [
-    'change the text', 'edit the content', 'modify the words', 'rewrite',
-    'add more text', 'remove text', 'change title', 'change subtitle'
-  ];
-  
-  const isContentChange = contentChangeKeywords.some(keyword => 
-    trimmedPrompt.includes(keyword)
-  );
-  
-  if (isContentChange) {
-    return { isValid: false, enhancedPrompt: 'Create a clean, modern design with good typography and spacing.' };
-  }
-  
-  // If prompt is valid, enhance it with design-specific instructions
-  const enhancedPrompt = enhanceDesignPrompt(trimmedPrompt);
+  // For all other text, let the AI handle it intelligently
+  const enhancedPrompt = `As a professional web designer, create a design that follows this vision: "${trimmedPrompt}". 
+
+CRITICAL REQUIREMENTS:
+- The design MUST be immediately visible and functional when the page loads
+- All text content must be clearly readable with strong contrast
+- The layout must be responsive and work on all screen sizes
+- Navigation and interactive elements must be easily accessible
+- The design should feel modern, professional, and polished
+
+DESIGN PRINCIPLES TO APPLY:
+- Excellent typography hierarchy with clear heading structure
+- Strong contrast between text and background colors (WCAG compliant)
+- Proper spacing and visual balance throughout the layout
+- Responsive design that adapts to different screen sizes
+- Professional color theory with harmonious color schemes
+- Clean, modern CSS styling with smooth transitions and hover effects
+- Accessible design with proper focus states and keyboard navigation
+- Visual hierarchy that guides the user's eye through the content
+- Consistent spacing and alignment throughout the design
+
+QUALITY STANDARDS:
+- No broken layouts or overlapping elements
+- No invisible text or poor contrast
+- No excessive animations that interfere with usability
+- No design elements that break the user experience
+- Ensure the design looks professional and trustworthy
+
+If the user's request is unclear, vague, or not design-related, fall back to creating a clean, modern, professional design with excellent typography, good visual hierarchy, and strong accessibility standards.
+
+Focus on creating a design that matches the user's vision while maintaining professional standards and user experience best practices. The final result should be immediately usable and visually appealing.`;
   
   return { isValid: true, enhancedPrompt };
 };
 
-// Function to enhance design prompts with specific instructions
+// Function to enhance design prompts with intelligent analysis
 const enhanceDesignPrompt = (prompt: string): string => {
+  const lowerPrompt = prompt.toLowerCase();
   let enhanced = prompt;
   
   // Add specific design instructions based on keywords
-  if (prompt.includes('dark') || prompt.includes('night')) {
+  if (lowerPrompt.includes('dark') || lowerPrompt.includes('night') || lowerPrompt.includes('black')) {
     enhanced += ' Use dark backgrounds with light text and subtle accents.';
   }
   
-  if (prompt.includes('light') || prompt.includes('bright') || prompt.includes('white')) {
+  if (lowerPrompt.includes('light') || lowerPrompt.includes('bright') || lowerPrompt.includes('white')) {
     enhanced += ' Use light backgrounds with dark text and clean typography.';
   }
   
-  if (prompt.includes('colorful') || prompt.includes('vibrant') || prompt.includes('bright')) {
+  if (lowerPrompt.includes('colorful') || lowerPrompt.includes('vibrant') || lowerPrompt.includes('bright') || lowerPrompt.includes('rainbow')) {
     enhanced += ' Use a vibrant color palette with strong contrasts and energetic elements.';
   }
   
-  if (prompt.includes('minimal') || prompt.includes('simple') || prompt.includes('clean')) {
+  if (lowerPrompt.includes('minimal') || lowerPrompt.includes('simple') || lowerPrompt.includes('clean') || lowerPrompt.includes('minimalist')) {
     enhanced += ' Use lots of white space, simple typography, and minimal decorative elements.';
   }
   
-  if (prompt.includes('professional') || prompt.includes('business') || prompt.includes('corporate')) {
+  if (lowerPrompt.includes('professional') || lowerPrompt.includes('business') || lowerPrompt.includes('corporate')) {
     enhanced += ' Use a conservative color palette, structured layout, and readable typography.';
   }
   
-  if (prompt.includes('modern') || prompt.includes('contemporary')) {
+  if (lowerPrompt.includes('modern') || lowerPrompt.includes('contemporary')) {
     enhanced += ' Use modern typography, clean lines, and contemporary design principles.';
   }
   
-  if (prompt.includes('elegant') || prompt.includes('luxury') || prompt.includes('premium')) {
+  if (lowerPrompt.includes('elegant') || lowerPrompt.includes('luxury') || lowerPrompt.includes('premium') || lowerPrompt.includes('sophisticated')) {
     enhanced += ' Use sophisticated typography, refined spacing, and premium visual elements.';
   }
   
-  if (prompt.includes('tech') || prompt.includes('futuristic') || prompt.includes('cyber')) {
+  if (lowerPrompt.includes('tech') || lowerPrompt.includes('futuristic') || lowerPrompt.includes('cyber') || lowerPrompt.includes('neon')) {
     enhanced += ' Use futuristic elements, neon accents, and high-tech visual styling.';
   }
   
-  if (prompt.includes('warm') || prompt.includes('cozy') || prompt.includes('comfortable')) {
+  if (lowerPrompt.includes('warm') || lowerPrompt.includes('cozy') || lowerPrompt.includes('comfortable') || lowerPrompt.includes('inviting')) {
     enhanced += ' Use warm color tones, soft gradients, and inviting visual elements.';
   }
   
-  if (prompt.includes('creative') || prompt.includes('artistic') || prompt.includes('art')) {
+  if (lowerPrompt.includes('creative') || lowerPrompt.includes('artistic') || lowerPrompt.includes('art') || lowerPrompt.includes('unique')) {
     enhanced += ' Use creative typography, artistic elements, and unique visual styling.';
   }
+  
+  if (lowerPrompt.includes('vintage') || lowerPrompt.includes('retro') || lowerPrompt.includes('old')) {
+    enhanced += ' Use vintage typography, retro color schemes, and classic design elements.';
+  }
+  
+  if (lowerPrompt.includes('playful') || lowerPrompt.includes('fun') || lowerPrompt.includes('cute')) {
+    enhanced += ' Use playful typography, fun colors, and whimsical design elements.';
+  }
+  
+  if (lowerPrompt.includes('serious') || lowerPrompt.includes('formal') || lowerPrompt.includes('strict')) {
+    enhanced += ' Use formal typography, structured layouts, and conservative design elements.';
+  }
+  
+  // Always add readability and contrast instructions
+  enhanced += ' Ensure excellent readability with strong contrast between text and background.';
   
   return enhanced;
 }; 

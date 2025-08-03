@@ -5,6 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
 import SimpleAIDesignButton from '@/components/SimpleAIDesignButton';
 import ReadingProgressBar from '@/components/ReadingProgressBar';
+import Comments from '@/components/Comments';
 import Link from 'next/link';
 
 // Function to replace all dynamic placeholders in HTML template
@@ -103,19 +104,25 @@ export default function BlogPageWrapper({ blogId }: BlogPageWrapperProps) {
       {/* Reading Progress Bar - Fixed at top level */}
       <ReadingProgressBar blogId={blogId} />
       
-      {/* Floating Buttons - Completely separate from HTML content */}
-      <div className="fixed top-10 left-10 z-[9999]" style={{ isolation: 'isolate', contain: 'layout style paint' }}>
-        <Link href="/" className="group bg-gray-900/95 backdrop-blur-md text-white px-10 py-5 rounded-2xl font-semibold hover:bg-gray-800/95 transition-all duration-300 flex items-center gap-5 shadow-2xl border border-gray-700/30 hover:border-gray-600/50 hover:shadow-gray-900/25 hover:scale-105 leading-tight" style={{ all: 'unset', display: 'flex', alignItems: 'center', gap: '1.25rem', backgroundColor: 'rgba(17, 24, 39, 0.95)', backdropFilter: 'blur(12px)', color: 'white', padding: '1.25rem 2.5rem', borderRadius: '1rem', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid rgba(55, 65, 81, 0.3)', textDecoration: 'none', fontSize: '1.125rem', letterSpacing: '0.025em', lineHeight: '1.25', cursor: 'pointer', zIndex: 9999 }}>
-          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" className="transition-transform duration-300 group-hover:-translate-x-1">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-          </svg>
-          <span className="text-lg tracking-wide">Back to Stories</span>
-        </Link>
+      {/* Floating AI Design Button - FIXED CONTAINER */}
+      <div style={{
+        position: 'fixed',
+        top: '2.5rem',
+        right: '2.5rem',
+        zIndex: 99999,
+        isolation: 'isolate'
+      }}>
+        <SimpleAIDesignButton blogId={blogId} blogPost={blogPost} />
       </div>
       
-      {/* Floating AI Design Button - Only show for owner */}
-      <div className="fixed top-10 right-10 z-[9999]" style={{ isolation: 'isolate', contain: 'layout style paint' }}>
-        <SimpleAIDesignButton blogId={blogId} blogPost={blogPost} />
+      {/* Floating Buttons - Completely separate from HTML content */}
+      <div className="fixed top-10 left-10 z-[9999]" style={{ isolation: 'isolate', contain: 'layout style paint' }}>
+        <Link href="/" className="group bg-gray-900/95 backdrop-blur-md text-white px-8 py-3 rounded-xl font-semibold hover:bg-gray-800/95 transition-all duration-300 flex items-center gap-3 shadow-xl border border-gray-700/30 hover:border-gray-600/50 hover:shadow-gray-900/25 hover:scale-105 leading-tight" style={{ all: 'unset', display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'rgba(17, 24, 39, 0.95)', backdropFilter: 'blur(12px)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '0.75rem', fontWeight: '600', transition: 'all 0.3s ease', boxShadow: '0 15px 35px -8px rgba(0, 0, 0, 0.25)', border: '1px solid rgba(55, 65, 81, 0.3)', textDecoration: 'none', fontSize: '0.95rem', letterSpacing: '0.025em', lineHeight: '1.25', cursor: 'pointer', zIndex: 9999 }}>
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" className="transition-transform duration-300 group-hover:-translate-x-1">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          <span className="text-sm tracking-wide">Back to Stories</span>
+        </Link>
       </div>
       
       {/* HTML Content - This can change, buttons stay the same */}
@@ -155,6 +162,24 @@ export default function BlogPageWrapper({ blogId }: BlogPageWrapperProps) {
             </div>
           )}
         </div>
+        
+        {/* Comments Section - Added back with hardcoded styling */}
+        {blogPost && (
+          <div style={{
+            width: '100%',
+            background: 'black',
+            padding: '3rem 0',
+            marginTop: '2rem'
+          }}>
+            <div style={{
+              maxWidth: '64rem',
+              margin: '0 auto',
+              padding: '0 1.5rem'
+            }}>
+              <Comments blogPostId={blogPost.id!} />
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
