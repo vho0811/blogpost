@@ -177,9 +177,12 @@ export default function InteractionSection({ blogPostId, initialLikesCount = 0, 
     try {
       setIsEditing(true);
       const updatedComment = await blogDatabase.updateComment(commentId, editingContent, user.id);
-      setComments(prev => prev.map(comment => 
-        comment.id === commentId ? updatedComment : comment
-      ));
+      if (updatedComment) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setComments(prev => prev.map(comment => 
+          comment.id === commentId ? updatedComment as any : comment
+        ));
+      }
       setEditingCommentId(null);
       setEditingContent('');
     } catch (error) {
