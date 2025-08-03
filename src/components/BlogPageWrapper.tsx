@@ -30,7 +30,9 @@ export default function BlogPageWrapper({ blogId }: BlogPageWrapperProps) {
           post = await blogDatabase.getBlogPost(blogId);
         }
         
-        setBlogPost(post);
+        if (post) {
+          setBlogPost(post);
+        }
       } catch (error) {
         console.error('Error loading blog post:', error);
       } finally {

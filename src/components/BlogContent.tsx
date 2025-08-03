@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { blogDatabase, type BlogPost } from '@/lib/blog-database';
 
 interface BlogContentProps {
@@ -11,7 +11,6 @@ export default function BlogContent({ docId }: BlogContentProps) {
   const [blogData, setBlogData] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const hasIncrementedViews = useRef(false);
 
   // Function to sanitize AI-generated HTML and remove navigation buttons
   const sanitizeAIHTML = (html: string): string => {
@@ -75,14 +74,6 @@ export default function BlogContent({ docId }: BlogContentProps) {
         
         if (post) {
           setBlogData(post);
-          
-          // Only increment views once per post per session
-          if (post.status === 'published' && post.id && !hasIncrementedViews.current) {
-            hasIncrementedViews.current = true;
-            await blogDatabase.incrementViews(post.id);
-            // Update the local state to reflect the incremented view count
-            setBlogData(prev => prev ? { ...prev, views: (prev.views || 0) + 1 } : prev);
-          }
         }
       } catch (error) {
         console.error('Error loading blog data:', error);

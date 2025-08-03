@@ -15,6 +15,29 @@ export default function Home() {
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Simple view increment when user clicks on a blog post
+  const handlePostClick = async (postId: string | undefined) => {
+    if (!postId) return;
+    try {
+      await blogDatabase.incrementViews(postId);
+      
+      // Update local state to reflect the change
+      setBlogPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.id === postId 
+            ? { ...post, views: (post.views || 0) + 1 }
+            : post
+        )
+      );
+      
+      // Update featured post if it's the one being clicked
+      if (featuredPost?.id === postId) {
+        setFeaturedPost(prev => prev ? { ...prev, views: (prev.views || 0) + 1 } : null);
+      }
+    } catch (error) {
+      console.error('Error incrementing view count:', error);
+    }
+  };
 
   // Debug Clerk state
 
@@ -175,7 +198,7 @@ export default function Home() {
         {featuredPost && (
           <div className="mb-16">
             <h2 className="text-3xl font-bold text-white mb-8 text-center">Featured Story</h2>
-            <Link href={`/blog/${featuredPost.slug || featuredPost.id}`} className="block group">
+                          <Link href={`/blog/${featuredPost.slug || featuredPost.id}`} className="block group" onClick={() => featuredPost.id && handlePostClick(featuredPost.id)}>
               <article className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-black to-gray-900 border border-gray-800 hover:border-gray-700 transition-all duration-700 hover:scale-[1.02]">
                 {/* Hero Image with Overlay */}
                 <div className="relative aspect-[21/9] overflow-hidden">
@@ -292,7 +315,7 @@ export default function Home() {
           ) : blogPosts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {blogPosts.map((post) => (
-                <Link key={post.id} href={`/blog/${post.slug || post.id}`} className="block group">
+                <Link key={post.id} href={`/blog/${post.slug || post.id}`} className="block group" onClick={() => handlePostClick(post.id)}>
                   <article className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-2xl overflow-hidden hover:from-gray-800/50 hover:to-gray-700/50 transition-all duration-500 hover:scale-105 border border-gray-800 hover:border-gray-700">
                     {/* Post Image */}
                     <div className="relative aspect-[16/10] overflow-hidden">
