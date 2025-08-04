@@ -145,7 +145,8 @@ export default function SocialActionsWrapper({
               display: 'flex',
               alignItems: 'center',
               gap: '0.75rem',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              cursor: isLiking ? 'not-allowed' : 'pointer'
             }}
           >
             <div 

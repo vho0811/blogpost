@@ -130,16 +130,18 @@ export default function BlogContent({ docId }: BlogContentProps) {
           style={{ 
             isolation: 'isolate',
             contain: 'layout style paint',
-            zIndex: 1
+            zIndex: 1,
+            maxWidth: '65rem',
+            margin: '0 auto',
+            padding: '2rem 1.5rem'
           }}
         >
           <div 
             dangerouslySetInnerHTML={{ __html: sanitizeAIHTML(blogData.ai_generated_html) }}
-            className="w-full min-h-screen"
+            className="w-full min-h-screen prose prose-lg"
             style={{ 
               display: 'block',
               width: '100%',
-              height: '100%',
               position: 'relative',
               zIndex: 1
             }}

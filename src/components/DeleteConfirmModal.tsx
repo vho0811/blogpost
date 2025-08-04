@@ -154,7 +154,7 @@ export default function DeleteConfirmModal({
               fontSize: '0.875rem'
             }}
           >
-            Delete Comment
+            {title === "Delete Blog Post" ? "Delete Blog Post" : "Delete Comment"}
           </button>
         </div>
       </div>

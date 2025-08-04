@@ -144,11 +144,11 @@ function WritePageContent() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{TITLE}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;900&family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif; 
             line-height: 1.6; 
             color: #e2e8f0; 
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
@@ -166,6 +166,7 @@ function WritePageContent() {
         .title { 
             font-size: 4rem; 
             font-weight: 900; 
+            font-family: 'Playfair Display', serif;
             margin-bottom: 1.5rem; 
             background: linear-gradient(135deg, #60a5fa, #8b5cf6, #ec4899); 
             -webkit-background-clip: text; 
@@ -255,6 +256,9 @@ function WritePageContent() {
             margin-bottom: 1.5rem; 
             line-height: 1.8;
             color: #e2e8f0;
+            font-size: 1.125rem;
+            font-weight: 300;
+            letter-spacing: 0.01em;
         }
         .content a { 
             color: #60a5fa; 
