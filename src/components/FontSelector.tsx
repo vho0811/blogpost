@@ -31,12 +31,9 @@ export default function FontSelector({ className }: FontSelectorProps) {
     setSelectedFont(fontValue);
     setIsOpen(false);
     
-    // Apply font to selected text
-    if (editor) {
-      editor.addStyles({
-        customFont: fontValue,
-      });
-    }
+    // Note: Font styling is handled through CSS classes and inline styles
+    // BlockNote doesn't support custom font styles directly
+    console.log('Font selected:', fontValue);
   };
 
   const selectedFontOption = fontOptions.find(font => font.value === selectedFont);
