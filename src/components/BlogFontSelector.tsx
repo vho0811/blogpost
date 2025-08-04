@@ -174,7 +174,6 @@ export default function BlogFontSelector({
       }}>
         <h3 style={{
           fontSize: '1.25rem',
-          fontWeight: '600',
           color: '#ffffff',
           marginBottom: '0.5rem',
           fontFamily: getFontFamily(selectedFont),
