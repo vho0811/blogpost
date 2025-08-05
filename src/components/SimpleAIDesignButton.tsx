@@ -67,16 +67,41 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  // const [mounted, setMounted] = useState(false);
+  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   
   const [settings, setSettings] = useState<AIDesignSettings>({
     style: 'modern',
     customPrompt: '', // Start with empty prompt - user must type or select
   });
 
-  // useEffect(() => {
-  //   setMounted(true);
-  // }, []);
+  // Check if user is the author of this blog post
+  useEffect(() => {
+    const checkOwnership = async () => {
+      if (user && blogPost?.user_id) {
+        try {
+          const response = await fetch('/api/get-supabase-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clerkUserId: user.id })
+          });
+          const { data: supabaseUser } = await response.json();
+          
+          if (supabaseUser?.id) {
+            setSupabaseUserId(supabaseUser.id);
+            setIsOwner(supabaseUser.id === blogPost.user_id);
+          }
+        } catch (error) {
+          console.error('Error checking ownership:', error);
+          setIsOwner(false);
+        }
+      } else {
+        setIsOwner(false);
+      }
+    };
+    
+    checkOwnership();
+  }, [user, blogPost?.user_id]);
 
   const handleAIDesign = async (themePrompt: string) => {
     setIsGenerating(true);
@@ -134,40 +159,8 @@ export default function SimpleAIDesignButton({ blogId, blogPost }: SimpleAIDesig
     });
   };
 
-  // Check if current user is the owner of the blog post
-  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const getSupabaseUserId = async () => {
-      if (user) {
-        try {
-          const response = await fetch('/api/get-supabase-user', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ clerkUserId: user.id })
-          });
-          const { data: supabaseUser } = await response.json();
-          
-          if (supabaseUser?.id) {
-            setSupabaseUserId(supabaseUser.id);
-          }
-        } catch (error) {
-          console.error('Error getting Supabase user ID:', error);
-        }
-      }
-    };
-    
-    getSupabaseUserId();
-  }, [user]);
-  
-  // const isOwner = supabaseUserId && blogPost && blogPost.user_id && supabaseUserId === blogPost.user_id;
-  
-  // FORCE SHOW BUTTON - FUCK THE MOUNTED CHECK
-  // if (!mounted) return null;
-  
-  // DEBUG: Show button for everyone temporarily to test positioning
-  // TODO: Restore owner-only access later
-  // if (!isOwner) return null;
+  // Only show the AI design button if the user is the owner of the blog post
+  if (!isOwner) return null;
 
   return (
     <>

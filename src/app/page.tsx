@@ -371,14 +371,16 @@ export default function Home() {
 
                   {/* Story Image */}
                   {post.featured_image_url && (
-                    <div className="relative aspect-[16/9] overflow-hidden">
-          <Image
-                        src={post.featured_image_url}
-                        alt={post.title}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                    </div>
+                    <Link href={`/blog/${post.slug || post.id}`} onClick={() => handlePostClick(post.id)}>
+                      <div className="relative aspect-[16/9] overflow-hidden cursor-pointer">
+                        <Image
+                          src={post.featured_image_url}
+                          alt={post.title}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      </div>
+                    </Link>
                   )}
 
                   {/* Professional Social Actions Wrapper */}

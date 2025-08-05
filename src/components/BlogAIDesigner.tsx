@@ -277,6 +277,9 @@ export default function BlogAIDesigner({
 
 
 
+  // Only show the AI designer if the user is the owner of the blog post
+  if (!isOwner) return null;
+
   return (
     <>
 
